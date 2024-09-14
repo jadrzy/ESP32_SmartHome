@@ -13,6 +13,7 @@ static i2c_master_dev_handle_t light_sensor_handle;
 
 void i2c_init(void);
 void sensor_config(void);
+void i2c_read_sensors(uint8_t * prt_lux);
 i2c_master_bus_handle_t master_bus_init(void);
 i2c_master_dev_handle_t slave_dev_init(uint16_t dev_address, i2c_master_bus_handle_t master_bus_handle);
 

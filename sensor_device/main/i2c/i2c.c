@@ -6,20 +6,32 @@
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 #include <freertos/queue.h>
+#include <stdint.h>
 
 void i2c_init(void)
 {
     bus_handle = master_bus_init();
     light_sensor_handle = slave_dev_init( LIGHT_SENSOR_ADDRESS, bus_handle);
+
+    sensor_config();
+
+    while (1)
+    {
+        read_light_sensor(light_sensor_handle);
+        vTaskDelay(15 / portTICK_PERIOD_MS);
+    }
 }
 
 void sensor_config(void)
 {
     light_sensor_config(light_sensor_handle); 
-    vTaskDelay(5000 / portTICK_PERIOD_MS);
-    ESP_LOGI("READ", "Read value: %f", read_light_sensor(light_sensor_handle));
 }
 
+void i2c_read_sensors(uint8_t * prt_lux)
+{
+    *prt_lux = read_light_sensor(light_sensor_handle);
+    // other sensors
+}
 
 i2c_master_bus_handle_t master_bus_init(void)
 {
