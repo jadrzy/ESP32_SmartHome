@@ -6,9 +6,9 @@
 #ifndef HEADER_LIGHT_SENSOR_H
 #define HEADER_LIGHT_SENSOR_H
 
-#define I2C_TIMEOUT 100
+#define I2C_TIMEOUT_LIGHT_SENSOR 100
 
-static const uint8_t command[][2] = {
+static const uint8_t command_light_sensor[][2] = {
     
     // TIME
     {   0x81,       // TIMING REG

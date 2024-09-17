@@ -3,6 +3,8 @@
 #include "esp_err.h"
 #include "esp_log.h"
 #include "i2c/light_sensor/light_sensor.h"
+#include "i2c/temp_hum_sensor/temp_hum_sensor.h"
+#include "i2c/pressure_sensor/pressure_sensor.h"
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 #include <freertos/queue.h>
@@ -11,26 +13,19 @@
 void i2c_init(void)
 {
     bus_handle = master_bus_init();
-    light_sensor_handle = slave_dev_init( LIGHT_SENSOR_ADDRESS, bus_handle);
 
-    sensor_config();
+    light_sensor_handle = slave_dev_init(LIGHT_SENSOR_ADDRESS, bus_handle);
+    temp_hum_sensor_handle = slave_dev_init(TEMP_HUM_SENSOR_ADDRESS, bus_handle);
+    pressure_sensor_handle = slave_dev_init(PRESSURE_SENSOR_ADDRESS, bus_handle);
+     
+    light_sensor_config(light_sensor_handle); 
+    temp_hum_sensor_config(temp_hum_sensor_handle);
+    pressure_sensor_config(pressure_sensor_handle);
 
     while (1)
     {
-        read_light_sensor(light_sensor_handle);
-        vTaskDelay(15 / portTICK_PERIOD_MS);
+        read_pressure_sensor(pressure_sensor_handle);
     }
-}
-
-void sensor_config(void)
-{
-    light_sensor_config(light_sensor_handle); 
-}
-
-void i2c_read_sensors(uint8_t * prt_lux)
-{
-    *prt_lux = read_light_sensor(light_sensor_handle);
-    // other sensors
 }
 
 i2c_master_bus_handle_t master_bus_init(void)
