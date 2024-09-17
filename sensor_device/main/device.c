@@ -7,7 +7,7 @@
 void app_main(void)
 {
     ESP_LOGI("TAG", "app_started");
-    static struct Data data;
+    // static struct Data data;
     i2c_init();
 
 }

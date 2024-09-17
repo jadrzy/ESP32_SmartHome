@@ -6,6 +6,8 @@
 #include <freertos/task.h>
 #include <stdint.h>
 
+uint8_t i2c_init_status = 0;
+
 struct Data {
     uint32_t temperature,
              humidity,

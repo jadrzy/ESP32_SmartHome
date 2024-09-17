@@ -20,7 +20,7 @@ void i2c_init(void)
      
     light_sensor_config(light_sensor_handle); 
     temp_hum_sensor_config(temp_hum_sensor_handle);
-    pressure_sensor_config(pressure_sensor_handle);
+    pressure_sensor_setup(pressure_sensor_handle);
 
     while (1)
     {
