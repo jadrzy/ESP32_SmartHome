@@ -34,22 +34,22 @@ void read_light_sensor(i2c_master_dev_handle_t * sensor_handle, uint32_t * lux)
     uint8_t command;
     uint8_t channel_0[2], channel_1[2];  // Buffers to store raw channel data
 
-    // Read photodiode 0 register values over I2C
+    // Read photodiode 0 (visible light focused) register values over I2C
     command = 0xAC;  // Command to read from photodiode 0
     ESP_ERROR_CHECK(i2c_master_transmit_receive(
         *sensor_handle, 
-        &command, 
-        1, 
+        &command, // Request photodiode 0 data 
+        1,           
         channel_0, 
         sizeof(channel_0), 
         I2C_TIMEOUT_LIGHT_SENSOR
     ));
 
-    // Read photodiode 1 register values over I2C
+    // Read photodiode 1 (IR focused) register values over I2C
     command = 0xAE;  // Command to read from photodiode 1
     ESP_ERROR_CHECK(i2c_master_transmit_receive(
         *sensor_handle, 
-        &command, 
+        &command, // Request photodiode 1 data 
         1, 
         channel_1, 
         sizeof(channel_1), 
