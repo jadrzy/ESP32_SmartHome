@@ -4,8 +4,13 @@
 void light_sensor_config(i2c_master_dev_handle_t * sensor_handle)
 {
     // i2c transmission
-    for (int i = 0; i < ( sizeof(command_light_sensor) / sizeof(command_light_sensor[2]) ); i++)
-        ESP_ERROR_CHECK(i2c_master_transmit(*sensor_handle, command_light_sensor[i], sizeof(command_light_sensor[i]), I2C_TIMEOUT_LIGHT_SENSOR));
+    for (int i = 0; i < (sizeof(command_light_sensor) / sizeof(command_light_sensor[2])); i++)
+        ESP_ERROR_CHECK(i2c_master_transmit(
+            *sensor_handle, 
+            command_light_sensor[i], 
+            sizeof(command_light_sensor[i]), 
+            I2C_TIMEOUT_LIGHT_SENSOR
+        ));
 }
 
 // LIGHT SENSOR READ VALUE FUNCTION
@@ -17,10 +22,25 @@ void read_light_sensor(i2c_master_dev_handle_t * sensor_handle, uint32_t * lux)
 
     // i2c read photodiode 0 register values
     command = 0xAC;
-    ESP_ERROR_CHECK(i2c_master_transmit_receive(*sensor_handle, &command, 1, channel_0, sizeof(channel_0), I2C_TIMEOUT_LIGHT_SENSOR));
+    ESP_ERROR_CHECK(i2c_master_transmit_receive(
+        *sensor_handle, 
+        &command, 
+        1, 
+        channel_0, 
+        sizeof(channel_0), 
+        I2C_TIMEOUT_LIGHT_SENSOR
+    ));
+
     // i2c read photodiode 1 register values
     command = 0xAE;
-    ESP_ERROR_CHECK(i2c_master_transmit_receive(*sensor_handle, &command, 1, channel_1, sizeof(channel_1), I2C_TIMEOUT_LIGHT_SENSOR));
+    ESP_ERROR_CHECK(i2c_master_transmit_receive(
+        *sensor_handle, 
+        &command, 
+        1, 
+        channel_1, 
+        sizeof(channel_1), 
+        I2C_TIMEOUT_LIGHT_SENSOR
+    ));
 
     // combine values 
     uint16_t channel_0_sum, channel_1_sum; 
