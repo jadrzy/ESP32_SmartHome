@@ -66,7 +66,7 @@
 //    iType - Sensor package type (T or CS)
 // Return: Approximate illuminance in lux
 //****************************************************************************
-unsigned int CalculateLux(unsigned int iGain, unsigned int tInt, unsigned int ch0, unsigned int ch1)
+static unsigned int CalculateLux(unsigned int iGain, unsigned int tInt, unsigned int ch0, unsigned int ch1)
 {
     unsigned long chScale;
     unsigned long channel0;
