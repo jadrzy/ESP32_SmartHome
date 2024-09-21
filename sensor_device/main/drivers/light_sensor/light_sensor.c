@@ -4,7 +4,7 @@
 // Function: light_sensor_config
 // Description: Configures the light sensor by sending a series of initialization 
 // commands over I2C communication.
-// Arguments:
+//y Arguments:
 //    sensor_handle - Handle to the I2C sensor device.
 //****************************************************************************
 void light_sensor_config(i2c_master_dev_handle_t * sensor_handle)

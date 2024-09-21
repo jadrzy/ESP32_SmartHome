@@ -35,6 +35,6 @@ static const uint8_t command_light_sensor[][2] = {
 // Function declarations
 void light_sensor_config(i2c_master_dev_handle_t * sensor_handle);  // Configure the light sensor
 void read_light_sensor(i2c_master_dev_handle_t * sensor_handle, uint32_t * lux);  // Read light sensor data
-static unsigned int CalculateLux(unsigned int iGain, unsigned int tInt, unsigned int ch0, unsigned int ch1);  // Calculate lux from raw sensor data
+unsigned int CalculateLux(unsigned int iGain, unsigned int tInt, unsigned int ch0, unsigned int ch1);  // Calculate lux from raw sensor data
 
 #endif
