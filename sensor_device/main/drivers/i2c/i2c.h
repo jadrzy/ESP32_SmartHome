@@ -1,4 +1,3 @@
-// Including necessary libraries and header files
 #include <driver/i2c_types.h>
 #include <driver/i2c_master.h>
 #include <freertos/FreeRTOS.h>
@@ -6,7 +5,6 @@
 #include <freertos/queue.h>
 #include <stdint.h>
 
-// Header guard to prevent multiple inclusions
 #ifndef HEADER_I2C_H
 #define HEADER_I2C_H
 
@@ -46,4 +44,4 @@ void i2c_init(struct i2c * i2c);
 static void master_init(i2c_master_bus_handle_t * bus);  // Initialize I2C master bus
 static void slave_init(i2c_master_bus_handle_t * bus, i2c_master_dev_handle_t * sensor, uint8_t address); // Initialize I2C slave device
 
-#endif  // End of header guard
+#endif
