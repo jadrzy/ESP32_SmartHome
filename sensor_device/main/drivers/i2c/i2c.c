@@ -1,5 +1,6 @@
 #include "i2c.h"
 
+
 static void master_init(i2c_master_bus_handle_t * bus)
 {
     ESP_ERROR_CHECK(i2c_new_master_bus(&i2c_master_config, bus));
@@ -11,6 +12,7 @@ static void slave_init(i2c_master_bus_handle_t * bus, i2c_master_dev_handle_t * 
     i2c_slave_config.device_address = address;  
     ESP_ERROR_CHECK(i2c_master_bus_add_device(*bus, &i2c_slave_config, sensor));
 }
+
 
 void i2c_init(struct i2c * i2c)
 {
