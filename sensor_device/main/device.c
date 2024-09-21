@@ -1,13 +1,14 @@
 #include "device.h"
-#include "freertos/idf_additions.h"
-#include "i2c/i2c.h"
-#include <stdint.h>
 
+
+static struct i2c i2c = {
+    .init_status = 0
+};
+
+static struct data data;
 
 void app_main(void)
 {
     ESP_LOGI("TAG", "app_started");
-    // static struct Data data;
-    i2c_init();
-
+    i2c_init(&i2c);
 }

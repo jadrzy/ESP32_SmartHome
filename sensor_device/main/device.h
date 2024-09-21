@@ -1,3 +1,4 @@
+#include "drivers/i2c/i2c.h"
 #ifndef  HEADER_DEVICE_H
 #define  HEADER_DEVICE_H
 
@@ -5,14 +6,13 @@
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 #include <stdint.h>
+#include <stdint.h>
 
-uint8_t i2c_init_status = 0;
-
-struct Data {
-    uint32_t temperature,
-             humidity,
-             pressure,
-             lux;
+struct data {
+    double  temperature,
+            humidity,
+            pressure,
+            lux;
 };
 
 #endif
