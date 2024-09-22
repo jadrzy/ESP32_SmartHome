@@ -1,5 +1,27 @@
 #include "light_sensor.h"
 
+// Command sequence for configuring the light sensor over I2C
+static const uint8_t command_light_sensor[][2] = {
+    
+    // Timing configuration
+    {   
+        0x81,   // Timing register
+        0x10,   // GAIN = 1x, INTEGRATION TIME = 402ms
+    },  
+
+    // Interrupt configuration
+    {   
+        0x86,   // Interrupt register
+        0x00,   // Disable interrupts
+    },
+
+    // Power up the sensor
+    {   
+        0x80,   // Control register
+        0x03,   // Power on
+    },
+};
+
 //****************************************************************************
 // Function: light_sensor_config
 // Description: Configures the light sensor by sending a series of initialization 
