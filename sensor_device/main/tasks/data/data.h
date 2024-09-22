@@ -4,13 +4,20 @@
 #include <stdint.h>
 
 struct data {
-    uint32_t temperature,
-             humidity,
-             pressure,
-             lux;
+    double lux;
+    double temperature,
+           humidity,
+           pressure;
 };
 
-extern uint32_t get_lux(void);
-extern void set_lux(uint32_t);
+extern double get_lux(void);
+extern double get_temperature(void);
+extern double get_humidity(void);
+extern double get_pressure(void);
+
+extern void set_lux(double);
+extern void set_temperature(double);
+extern void set_humidity(double);
+extern void set_pressure(double);
 
 #endif
