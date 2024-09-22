@@ -1,4 +1,5 @@
 #include "light_sensor.h"
+#include <stdint.h>
 
 // Command sequence for configuring the light sensor over I2C
 static const uint8_t command_light_sensor[][2] = {
@@ -29,6 +30,7 @@ static const uint8_t command_light_sensor[][2] = {
 //y Arguments:
 //    sensor_handle - Handle to the I2C sensor device.
 //****************************************************************************
+
 void light_sensor_config(i2c_master_dev_handle_t * sensor_handle)
 {
     // Loop through all light sensor commands and send them via I2C
@@ -51,7 +53,7 @@ void light_sensor_config(i2c_master_dev_handle_t * sensor_handle)
 //    sensor_handle - Handle to the I2C sensor device.
 //    lux - Pointer to store the calculated lux value.
 //****************************************************************************
-void read_light_sensor(i2c_master_dev_handle_t * sensor_handle, uint32_t * lux)
+void read_light_sensor(i2c_master_dev_handle_t * sensor_handle, double * lux)
 {
     uint8_t command;
     uint8_t channel_0[2], channel_1[2];  // Buffers to store raw channel data
@@ -83,5 +85,5 @@ void read_light_sensor(i2c_master_dev_handle_t * sensor_handle, uint32_t * lux)
     uint16_t channel_1_sum = (channel_1[1] << 8) | channel_1[0];
 
     // Convert the raw photodiode readings into a lux value
-    *lux = CalculateLux(1, 0, channel_0_sum, channel_1_sum);
+    *lux = (double) CalculateLux(1, 0, channel_0_sum, channel_1_sum);
 }

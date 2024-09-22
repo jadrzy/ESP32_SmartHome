@@ -12,7 +12,7 @@
 
 // Function declarations
 void light_sensor_config(i2c_master_dev_handle_t * sensor_handle);  // Configure the light sensor
-void read_light_sensor(i2c_master_dev_handle_t * sensor_handle, uint32_t * lux);  // Read light sensor data
+void read_light_sensor(i2c_master_dev_handle_t * sensor_handle, double * lux);  // Read light sensor data
 unsigned int CalculateLux(unsigned int iGain, unsigned int tInt, unsigned int ch0, unsigned int ch1);  // Calculate lux from raw sensor data
 
 #endif
