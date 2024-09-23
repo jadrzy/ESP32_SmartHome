@@ -17,6 +17,7 @@ void initialize_sensors(void)
     i2c_init(&i2c_handles);
     light_sensor_config(&i2c_handles.light_sensor_handle);
     temp_hum_sensor_config(&i2c_handles.temp_hum_sensor_handle);
+    pressure_sensor_config(&i2c_handles.pressure_sensor_handle);
 }
 
 void task_fun_get_temp_hum_values(void *p)
@@ -62,6 +63,21 @@ void task_fun_get_lux_value(void *p)
     }
 }
 
+void task_fun_get_pressure_value(void *p)
+{
+    double temp_press;
+    while(1)
+    {
+        read_pressure_sensor(&i2c_handles.pressure_sensor_handle, &temp_press);
+
+        if( xSemaphoreTake(xMutex_Pressure, 10) == pdTRUE)
+        {
+            set_pressure(temp_press);
+            xSemaphoreGive(xMutex_Pressure);
+        }
+        vTaskDelay(PRESSURE_SENSOR_MEASUREMENT_TIME);
+    }
+}
 
 void task_debug(void *p)
 {
@@ -119,6 +135,15 @@ void initialize_tasks(void)
         NULL, 
         5, 
         &task_handles.temp_hum_task
+    );
+
+    xTaskCreate(
+        task_fun_get_pressure_value, 
+        "GET PRESSURE TASK", 
+        6144, 
+        NULL, 
+        5, 
+        &task_handles.press_task
     );
 
     xTaskCreate(
