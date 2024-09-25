@@ -6,41 +6,23 @@
 #include <stdint.h>
 #include "freertos/idf_additions.h"
 
-static struct data_calibration d_calib = {
-    .T1 = 27504,
-    .T2 = 25435,
-    .T3 = -1000,
-    .P1 = 36477,
-    .P2 = -10685,
-    .P3 = 3024,
-    .P4 = 2855,
-    .P5 = 140,
-    .P6 = -7,
-    .P7 = 15500,
-    .P8 = -14600,
-    .P9 = 6000
-};
+static struct data_calibration d_calib;
 
 void pressure_sensor_config(i2c_master_dev_handle_t * sensor_handle)
 {
-    const uint8_t pressure_sensor_settings[][2] = {
-        {   0xF4,
-            0x14,},
+    const uint8_t pressure_sensor_settings[] = {
         // CONFIG
-        {   0xF5,       // CONFIG REG
-            0x10,   },  // IIR FILTER x16 
+        0xF5,       // CONFIG REG
+        0x10  // IIR FILTER x16 
     };
     // I2C transmission
-    for (int i = 0; i < (sizeof(pressure_sensor_settings) / sizeof(pressure_sensor_settings[2])); i++)
-    {
-        ESP_ERROR_CHECK(i2c_master_transmit(   
-            *sensor_handle, 
-            pressure_sensor_settings[i], 
-            sizeof(pressure_sensor_settings[i]), 
-            I2C_TIMEOUT_PRESSURE_SENSOR
-        ));
-    }
-    // get_calibration_data(sensor_handle, &d_calib);
+    ESP_ERROR_CHECK(i2c_master_transmit(   
+        *sensor_handle, 
+        pressure_sensor_settings, 
+        sizeof(pressure_sensor_settings), 
+        I2C_TIMEOUT_PRESSURE_SENSOR
+    ));
+    get_calibration_data(sensor_handle, &d_calib);
 }
 
 void get_calibration_data(i2c_master_dev_handle_t * sensor_handle, struct data_calibration * data)
@@ -76,8 +58,6 @@ void get_calibration_data(i2c_master_dev_handle_t * sensor_handle, struct data_c
 
 double calculate_pressure(int temp, int press)
 {
-    temp = 519888;
-    press = 415148;
     int var1, var2;
     uint32_t p;
     var1 = ((((temp>>3)-((int)d_calib.T1<<1)))*((int)d_calib.T2))>>11;
@@ -96,7 +76,7 @@ double calculate_pressure(int temp, int press)
     }
     else
     {
-        p = (((uint32_t)(((int)1038576)-press)-(var2>>12)))*3125;
+        p = (((uint32_t)(((int)1048576)-press)-(var2>>12)))*3125;
         if (p < 0x80000000)
         {
             p = (p << 1) / ((uint32_t)var1);
@@ -108,6 +88,7 @@ double calculate_pressure(int temp, int press)
         var1 = (((int)d_calib.P9)*((int)(((p>>3)*(p>>3))>>13)))>>12;
         var2 = (((int)(p>>2))*((int)d_calib.P8))>>13;
         p = (uint32_t)((int)p+((var1+var2+d_calib.P7)>>4));
+
     }
     return ((double)p / 100);
 }
