@@ -1,6 +1,5 @@
 #include "temp_hum_sensor.h"
-#include "freertos/idf_additions.h"
-#include <stdint.h>
+
 
 static const uint8_t command_temp_hum_sensor[] = {
     // SETUP COMMAND (CALIBRATION)
