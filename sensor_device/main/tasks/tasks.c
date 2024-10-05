@@ -1,8 +1,4 @@
 #include "tasks.h"
-#include "freertos/idf_additions.h"
-#include "freertos/projdefs.h"
-#include "tasks/data/data.h"
-#include <stdint.h>
 
 static struct i2c i2c_handles;
 static struct task_handles task_handles;
