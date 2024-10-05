@@ -1,4 +1,7 @@
 #include "driver/i2c_types.h"
+#include "driver/i2c_master.h"
+#include "freertos/idf_additions.h"
+#include <esp_check.h>
 #include <esp_log.h>
 #include <stdint.h>
 
