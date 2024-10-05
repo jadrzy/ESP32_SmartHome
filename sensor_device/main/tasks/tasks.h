@@ -4,6 +4,7 @@
 #include "drivers/temp_hum_sensor/temp_hum_sensor.h"
 #include "drivers/pressure_sensor/pressure_sensor.h"
 
+#include "freertos/projdefs.h"
 #include "freertos/idf_additions.h"
 #include "freertos/semphr.h"
 #include <stdint.h>
@@ -11,28 +12,29 @@
 #ifndef HEADER_TASKS_H
 #define HEADER_TASKS_H
 
-#define LIGHT_SENSOR_MEASUREMENT_TIME (15 / portTICK_PERIOD_MS)
-#define TEMP_HUM_SENSOR_MEASUREMENT_TIME (5 / portTICK_PERIOD_MS) // (85ms included during measurement)
-#define PRESSURE_SENSOR_MEASUREMENT_TIME (5 / portTICK_PERIOD_MS) // (45ms included during measurement)
-//
+// Sensor measurement times in ticks
+#define LIGHT_SENSOR_MEASUREMENT_TIME     (15 / portTICK_PERIOD_MS)   // 15ms for light sensor measurement
+#define TEMP_HUM_SENSOR_MEASUREMENT_TIME  (5 / portTICK_PERIOD_MS)    // 5ms for temperature & humidity sensor (+85ms in measurement)
+#define PRESSURE_SENSOR_MEASUREMENT_TIME  (5 / portTICK_PERIOD_MS)    // 5ms for pressure sensor (+45ms in measurement)
+
+// Structure to hold task handles for FreeRTOS tasks
 struct task_handles {
-    TaskHandle_t
-        lux_task,
-        temp_hum_task,
-        press_task,
-        wifi_task;
+    TaskHandle_t lux_task;        // Task handle for light sensor
+    TaskHandle_t temp_hum_task;   // Task handle for temperature & humidity sensor
+    TaskHandle_t press_task;      // Task handle for pressure sensor
+    TaskHandle_t wifi_task;       // Task handle for Wi-Fi task
 };
 
-
+// Function to initialize all sensors
 void initialize_sensors(void);
 
-// Task functions
-void task_fun_get_lux_value(void *);
-void task_fun_get_temp_hum_values(void *);
-void task_fun_get_pressure_value(void *);
-void task_debud(void*);
+// Task function declarations
+void task_fun_get_lux_value(void *pvParameters);          // Task to get light sensor value
+void task_fun_get_temp_hum_values(void *pvParameters);    // Task to get temperature & humidity sensor values
+void task_fun_get_pressure_value(void *pvParameters);     // Task to get pressure sensor value
+void task_debug(void *pvParameters);                      // Debug task function
 
-// Create tasks fucntion
-void initialize_tasks(void); 
+// Function to initialize and create FreeRTOS tasks
+void initialize_tasks(void);
 
-#endif
+#endif // HEADER_TASKS_H
