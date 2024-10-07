@@ -1,0 +1,14 @@
+key,type,encoding,value
+master_device,namespace,,
+serial_number,file,string,./main/serial/serial_number.txt
+slave_device,namespace,,
+serial_01,data,string,NULL
+serial_02,data,string,NULL
+serial_03,data,string,NULL
+serial_04,data,string,NULL
+serial_05,data,string,NULL
+serial_06,data,string,NULL
+serial_07,data,string,NULL
+serial_08,data,string,NULL
+serial_09,data,string,NULL
+serial_10,data,string,NULL
