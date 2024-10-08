@@ -1,6 +1,6 @@
 key,type,encoding,value
 master_device,namespace,,
-serial_number,file,string,./main/serial/serial_number.txt
+serial_number,file,string,serial_number.txt
 slave_device,namespace,,
 serial_01,data,string,NULL
 serial_02,data,string,NULL

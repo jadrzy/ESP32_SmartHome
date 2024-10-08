@@ -13,5 +13,6 @@
 
 
 void init_nvs(void);
+void operation(void);
 
 #endif
