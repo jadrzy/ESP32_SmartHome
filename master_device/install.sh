@@ -24,7 +24,7 @@ BIN_FILE="partitions/serial.bin"
 check_file "$CSV_FILE"
 
 printf '\nMaking binary partitions...\n'
-~/Documents/esp/esp-idf/components/nvs_flash/nvs_partition_generator/nvs_partition_gen.py "$CSV_FILE" "$BIN_FILE" 12288
+~/Documents/esp/esp-idf/components/nvs_flash/nvs_partition_generator/nvs_partition_gen.py generate "$CSV_FILE" "$BIN_FILE" 12288
 
 # Check if the binary partition file exists before flashing
 check_file "$BIN_FILE"
