@@ -9,10 +9,12 @@
 #include "esp_wifi.h"
 #include "esp_event.h"
 #include "esp_log.h"
+#include "master_device.h"
 #include "nvs_flash.h"
 
-
-void init_nvs(void);
-void operation(void);
+void init_nvs_partitions(void);
+void get_master_serial_number_from_nvs(char * number);
+void get_slave_serial_number_from_nvs(char number[][SERIAL_NUMBER_SIZE + 1]);
+// void operation(void);
 
 #endif
