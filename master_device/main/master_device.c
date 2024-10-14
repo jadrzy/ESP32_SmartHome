@@ -20,6 +20,4 @@ void app_main(void)
         ESP_LOGI("TAG", "SLAVE_%02d_SERIAL = %s", (i + 1), slave_serial_number[i]);
     }
 
-    strcpy(slave_serial_number[4], "hello");
-    write_slave_serial_number_to_nvs(slave_serial_number);
 }

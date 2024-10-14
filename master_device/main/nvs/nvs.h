@@ -9,7 +9,6 @@
 #include "esp_log.h"
 #include "esp_mac.h"
 #include "nvs_flash.h"
-#include "master_device.h"
 
 // Constants
 #define SERIAL_NUMBER_SIZE 12
