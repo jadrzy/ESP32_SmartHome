@@ -11,6 +11,10 @@
 #include "nvs_flash.h"
 #include "master_device.h"
 
+// Constants
+#define SERIAL_NUMBER_SIZE 12
+#define NUMBER_OF_DEVICES 10
+
 // Function declarations
 void init_nvs_partitions(void);
 void get_master_serial_number_from_nvs(char *number);
