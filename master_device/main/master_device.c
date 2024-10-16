@@ -7,6 +7,8 @@
 
 static char master_serial_number[SERIAL_NUMBER_SIZE + 1];
 static char slave_serial_number[NUMBER_OF_DEVICES][SERIAL_NUMBER_SIZE + 1];
+static char SSID[WIFI_CREDENTIALS_SIZE + 1];
+static char PSSWD[WIFI_CREDENTIALS_SIZE + 1];
 
 void app_main(void)
 {
@@ -19,5 +21,11 @@ void app_main(void)
     {
         ESP_LOGI("TAG", "SLAVE_%02d_SERIAL = %s", (i + 1), slave_serial_number[i]);
     }
+
+    write_wifi_sm_cred_to_nvs("WIFI SSID", "MY PASSWORD");
+    get_wifi_sm_cred_from_nvs(SSID, PSSWD);
+
+    ESP_LOGI("TAG", "SSID = %s\n"
+                    "PSSWD = %s", SSID, PSSWD);
 
 }

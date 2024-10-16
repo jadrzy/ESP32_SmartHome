@@ -12,3 +12,6 @@ serial_07,data,string,serial7
 serial_08,data,string,serial8
 serial_09,data,string,serial9
 serial_10,data,string,serial10
+WIFI_SM,namespace,,
+SSID,data,string,
+PSSWD,data,string,
