@@ -1,5 +1,8 @@
 #include "nvs.h"
+#include "esp_log.h"
+#include "esp_partition.h"
 #include "master_device.h"
+#include "nvs_flash.h"
 
 // Initialize NVS partitions has to be called before read/write
 void init_nvs_partitions(void)
@@ -14,11 +17,24 @@ void init_nvs_partitions(void)
     }
     ESP_ERROR_CHECK(ret);
 
-    // Initialize NVS partition for "serial"
-    ret = nvs_flash_init_partition("data");
+    // Initialize encrypted NVS partition
+    // Find nvs_keys partition
+    const esp_partition_t * partition = esp_partition_find_first(ESP_PARTITION_TYPE_DATA, ESP_PARTITION_SUBTYPE_DATA_NVS_KEYS, "nvs_keys");
+    if (partition == NULL){
+        ESP_LOGE(TAG, "Could not locate partition %s", "nvs_keys");
+        return;
+    }
+
+    // Read nvs_keys partition
+    nvs_sec_cfg_t cfg;
+    ret = nvs_flash_read_security_cfg(partition, &cfg);
+    ESP_ERROR_CHECK(ret); 
+
+    // Initialize nvs partition
+    ret = nvs_flash_secure_init_partition("data", &cfg);
     if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
         ESP_ERROR_CHECK(nvs_flash_erase_partition("data"));
-        ret = nvs_flash_init_partition("data");
+        ret = nvs_flash_secure_init_partition("data", &cfg);
     }
     ESP_ERROR_CHECK(ret);
 }
