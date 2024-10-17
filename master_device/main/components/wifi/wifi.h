@@ -25,10 +25,6 @@
 #include "espnow_example.h"
 #include "components/components.h"
 
-
-#define AP_SSID "SETUP"
-#define AP_PSSWD = "PASS" 
-
-void wifi_init(void);
+esp_err_t wifi_init(bool setup_active);
 
 #endif
