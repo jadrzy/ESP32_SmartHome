@@ -13,7 +13,6 @@ static wifi_sta_cred_t station_cerdentials;
 static device_t paired_devices[NUMBER_OF_DEVICES]; 
 
 
-
 static void debug_nvs(void)
 {
     ESP_LOGI(TAG_BODY, "Station credentials:");

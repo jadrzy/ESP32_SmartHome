@@ -5,7 +5,7 @@
 
 
 
-static const char *TAG = "WIFI";
+static const char *TAG_WIFI = "WIFI";
 static wifi_config_t wifi_ap_config = {
     .ap = {
         .ssid = "SETUP",
@@ -21,8 +21,6 @@ static wifi_config_t wifi_ap_config = {
 
 static wifi_config_t wifi_sta_config = {
     .sta = {
-        .ssid = "LE",
-        .password = "PASS",
         .scan_method = WIFI_ALL_CHANNEL_SCAN,
         .failure_retry_cnt = 10,
         .threshold.authmode = WIFI_AUTH_WPA2_PSK,
@@ -39,8 +37,10 @@ static esp_netif_t *wifi_init_ap(void)
     return esp_netif_ap;
 }
 
-static esp_netif_t *wifi_init_sta(void)
+static esp_netif_t *wifi_init_sta(wifi_sta_cred_t * wifi_sta_cred)
 {
+    strcpy(wifi_sta_config.sta.ssid, wifi_sta_cred->ssid);
+    strcpy(wifi_sta_config.sta.password, wifi_sta_cred->psswd);
     esp_netif_t *esp_netif_sta = esp_netif_create_default_wifi_sta();
     ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &wifi_sta_config));
     ESP_LOGI(TAG, "wifi init sta done");

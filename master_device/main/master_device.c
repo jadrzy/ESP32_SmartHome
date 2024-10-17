@@ -9,5 +9,4 @@ void app_main(void)
 {
     init_nvs_partitions();
     run();
-    run();
 }

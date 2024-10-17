@@ -23,6 +23,7 @@
 #include "esp_now.h"
 #include "esp_crc.h"
 #include "espnow_example.h"
+#include "components/components.h"
 
 
 #define AP_SSID "SETUP"
