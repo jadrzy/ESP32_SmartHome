@@ -3,6 +3,4 @@
 
 #define TAG "Master Device"
 
-#include "nvs/nvs.h"
-
 #endif

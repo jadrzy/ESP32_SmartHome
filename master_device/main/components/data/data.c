@@ -3,3 +3,5 @@
 
 static struct sensor_data data[10] = {0};
 
+
+
