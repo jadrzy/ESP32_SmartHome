@@ -5,6 +5,7 @@
 #include "esp_wifi_types_generic.h"
 #include <stdio.h>
 #include <string.h>
+static const char *TAG_WIFI = "WIFI";
 
 // ADDED ////////////////////////////////////
 #define WIFI_CONNECTED_BIT BIT0
@@ -13,6 +14,8 @@
 /*DHCP server option*/
 #define DHCPS_OFFER_DNS             0x02
 
+static int s_retry_num = 0;
+
 static EventGroupHandle_t s_wifi_event_group;
 
 static void wifi_event_handler(void *arg, esp_event_base_t event_base,
@@ -20,25 +23,24 @@ static void wifi_event_handler(void *arg, esp_event_base_t event_base,
 {
     if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_AP_STACONNECTED) {
         wifi_event_ap_staconnected_t *event = (wifi_event_ap_staconnected_t *) event_data;
-        ESP_LOGI(TAG_AP, "Station "MACSTR" joined, AID=%d",
+        ESP_LOGI(TAG_WIFI, "Station "MACSTR" joined, AID=%d",
                  MAC2STR(event->mac), event->aid);
     } else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_AP_STADISCONNECTED) {
         wifi_event_ap_stadisconnected_t *event = (wifi_event_ap_stadisconnected_t *) event_data;
-        ESP_LOGI(TAG_AP, "Station "MACSTR" left, AID=%d, reason:%d",
+        ESP_LOGI(TAG_WIFI, "Station "MACSTR" left, AID=%d, reason:%d",
                  MAC2STR(event->mac), event->aid, event->reason);
     } else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_START) {
         esp_wifi_connect();
-        ESP_LOGI(TAG_STA, "Station started");
+        ESP_LOGI(TAG_WIFI, "Station started");
     } else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP) {
         ip_event_got_ip_t *event = (ip_event_got_ip_t *) event_data;
-        ESP_LOGI(TAG_STA, "Got IP:" IPSTR, IP2STR(&event->ip_info.ip));
+        ESP_LOGI(TAG_WIFI, "Got IP:" IPSTR, IP2STR(&event->ip_info.ip));
         s_retry_num = 0;
         xEventGroupSetBits(s_wifi_event_group, WIFI_CONNECTED_BIT);
     }
 }
 ///////////////////////////////////////////
 
-static const char *TAG_WIFI = "WIFI";
 
 
 static esp_netif_t *wifi_init_ap(bool visibility)
@@ -54,7 +56,7 @@ static esp_netif_t *wifi_init_ap(bool visibility)
     };
     
     char * ssid_ap = get_master_device_cred().serial;
-    char * psswd_ap;
+    char * psswd_ap = "\0";
     sprintf(psswd_ap, "%" PRIu64, get_master_device_cred().mac);
     strcpy((char *) wifi_ap_config.ap.ssid, ssid_ap);    
     strcpy((char *) wifi_ap_config.ap.password, psswd_ap);    
@@ -172,15 +174,15 @@ esp_err_t wifi_init(bool setup_active)
     /* xEventGroupWaitBits() returns the bits before the call returned,
      * hence we can test which event actually happened. */
     if (bits & WIFI_CONNECTED_BIT) {
-        ESP_LOGI(TAG_STA, "connected to ap SSID:%s password:%s",
-                 EXAMPLE_ESP_WIFI_STA_SSID, EXAMPLE_ESP_WIFI_STA_PASSWD);
+        ESP_LOGI(TAG_WIFI, "connected to ap SSID:%s password:%s",
+                 get_station_cred().ssid, get_station_cred().psswd);
         softap_set_dns_addr(esp_netif_ap,esp_netif_sta);
     } else if (bits & WIFI_FAIL_BIT) {
-        ESP_LOGI(TAG_STA, "Failed to connect to SSID:%s, password:%s",
-                 EXAMPLE_ESP_WIFI_STA_SSID, EXAMPLE_ESP_WIFI_STA_PASSWD);
+        ESP_LOGI(TAG_WIFI, "Failed to connect to SSID:%s, password:%s",
+                 get_station_cred().ssid, get_station_cred().psswd);
     } else {
-        ESP_LOGE(TAG_STA, "UNEXPECTED EVENT");
-        return;
+        ESP_LOGE(TAG_WIFI, "UNEXPECTED EVENT");
+        return err;
     }
 
     /* Set sta as the default interface */
@@ -188,7 +190,7 @@ esp_err_t wifi_init(bool setup_active)
 
     /* Enable napt on the AP netif */
     if (esp_netif_napt_enable(esp_netif_ap) != ESP_OK) {
-        ESP_LOGE(TAG_STA, "NAPT not enabled on the netif: %p", esp_netif_ap);
+        ESP_LOGE(TAG_WIFI, "NAPT not enabled on the netif: %p", esp_netif_ap);
     }
 
 

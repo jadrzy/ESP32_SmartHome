@@ -3,7 +3,7 @@ idf_component_register(
         "master_device.c"
         #"tasks/task.c"
         #"components/data/data.c"
-        #"components/wifi/wifi.c"
+        "components/wifi/wifi.c"
         "components/nvs/nvs.c"
         "components/components.c"
     INCLUDE_DIRS 

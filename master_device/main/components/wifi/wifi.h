@@ -22,7 +22,6 @@
 #include "esp_mac.h"
 #include "esp_now.h"
 #include "esp_crc.h"
-#include "espnow_example.h"
 #include "components/components.h"
 
 esp_err_t wifi_init(bool setup_active);
