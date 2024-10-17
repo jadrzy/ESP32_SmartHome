@@ -21,5 +21,8 @@ typedef struct {
 } device_t;
 
 esp_err_t run(void);
+esp_err_t memory_setup(void);
+void mac_8_64(const uint8_t input[6], uint64_t *output);
+void mac_64_8(const uint64_t input, uint8_t output[6]);
 
 #endif

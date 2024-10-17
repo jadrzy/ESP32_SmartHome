@@ -3,14 +3,13 @@
 #include "esp_wifi_types_generic.h"
 #include <string.h>
 
-
-
 static const char *TAG_WIFI = "WIFI";
+
 static wifi_config_t wifi_ap_config = {
     .ap = {
-        .ssid = "SETUP",
+        .ssid = ,
         .ssid_len = strlen("SETUP"),
-        .channel = 3,
+        .channel = 1,
         .password = "PASS",
         .max_connection = 1,
         .pmf_cfg = {
@@ -28,7 +27,7 @@ static wifi_config_t wifi_sta_config = {
     },
 };
 
-static esp_netif_t *wifi_init_ap(void)
+static esp_netif_t *wifi_init_ap(bool visibility)
 {
     esp_netif_t *esp_netif_ap = esp_netif_create_default_wifi_ap();
     ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_AP, &wifi_ap_config));
@@ -39,11 +38,15 @@ static esp_netif_t *wifi_init_ap(void)
 
 static esp_netif_t *wifi_init_sta(wifi_sta_cred_t * wifi_sta_cred)
 {
-    strcpy(wifi_sta_config.sta.ssid, wifi_sta_cred->ssid);
-    strcpy(wifi_sta_config.sta.password, wifi_sta_cred->psswd);
+    strcpy((char *) wifi_sta_config.sta.ssid, wifi_sta_cred->ssid);
+    strcpy((char *) wifi_sta_config.sta.password, wifi_sta_cred->psswd);
+    // For safety (casting char *)
+    wifi_sta_config.sta.ssid[31] = '\0';
+    wifi_sta_config.sta.password[63] = '\0';
+
     esp_netif_t *esp_netif_sta = esp_netif_create_default_wifi_sta();
     ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &wifi_sta_config));
-    ESP_LOGI(TAG, "wifi init sta done");
+    ESP_LOGI(TAG, "WIFI station mode setup done...");
 
     return esp_netif_sta;
 }
