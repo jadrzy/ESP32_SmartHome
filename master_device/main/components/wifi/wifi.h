@@ -13,6 +13,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/semphr.h"
 #include "freertos/timers.h"
+#include "esp_event_base.h"
 #include "nvs_flash.h"
 #include "esp_random.h"
 #include "esp_event.h"

@@ -1,6 +1,7 @@
 #include "wifi.h"
 #include "components/nvs/nvs.h"
 #include "esp_err.h"
+#include "esp_event_base.h"
 #include "esp_wifi.h"
 #include "esp_wifi_types_generic.h"
 #include <stdio.h>
@@ -126,6 +127,7 @@ esp_err_t wifi_init(bool setup_active)
     // ADDED //////////////////////////////////////////////////////
      s_wifi_event_group = xEventGroupCreate();
 
+    ESP_LOGI(TAG_WIFI, "info %d", ESP_EVENT_ANY_ID);
     /* Register Event handler */
     ESP_ERROR_CHECK(esp_event_handler_instance_register(WIFI_EVENT,
                     ESP_EVENT_ANY_ID,
