@@ -27,4 +27,6 @@ void mac_64_8(const uint64_t input, uint8_t output[6]);
 device_t get_master_device_cred(void);
 wifi_sta_cred_t get_station_cred(void);
 
+esp_err_t activate_setup_mode(void);
+
 #endif

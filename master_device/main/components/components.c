@@ -1,5 +1,6 @@
 #include "components.h"
 #include "components/nvs/nvs.h"
+#include "components/wifi/wifi.h"
 #include "esp_err.h"
 #include "esp_log.h"
 #include "esp_mac.h"
@@ -59,6 +60,12 @@ esp_err_t memory_setup(void)
 
     return err;
 }
+
+// esp_err_t activate_setup_mode(void)
+// {
+//     wifi_set_ap_setup(true);
+//     wifi_update();
+// }
 
 void mac_8_64(const uint8_t input[6], uint64_t *output)
 {

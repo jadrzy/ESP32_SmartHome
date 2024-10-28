@@ -25,6 +25,8 @@
 #include "esp_crc.h"
 #include "components/components.h"
 
-esp_err_t wifi_init(bool setup_active);
+esp_err_t wifi_init();
+void wifi_update(void);
+void wifi_set_ap_setup(bool state);
 
 #endif
