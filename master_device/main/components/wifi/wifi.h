@@ -2,6 +2,7 @@
 #define WIFI_HEADER
 
 
+#include <stdint.h>
 #include <stdlib.h>
 #include <time.h>
 #include <string.h>
@@ -24,7 +25,7 @@
 #include "esp_now.h"
 #include "esp_crc.h"
 #include "components/components.h"
-
+#include "components/data/data.h"
 
 typedef struct {
     unsigned int setup_mode : 1;

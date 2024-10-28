@@ -12,60 +12,79 @@
 
 static const char TAG_BODY[] = "BODY";
 
-static wifi_sta_cred_t station_cerdentials;
-static device_t master_device;
-static device_t paired_devices[NUMBER_OF_DEVICES]; 
 
-device_t get_master_device_cred(void) {return master_device;}
-wifi_sta_cred_t get_station_cred(void) {return station_cerdentials;}
-
-static void debug_nvs(void)
-{
-    ESP_LOGI(TAG_BODY, "Station credentials:");
-    ESP_LOGI(TAG_BODY, "SSID = %s", station_cerdentials.ssid);
-    ESP_LOGI(TAG_BODY, "PSSWD = %s", station_cerdentials.psswd);
-    ESP_LOGI(TAG_BODY, "Paired devices credentials:");
-    for (int i = 0; i < NUMBER_OF_DEVICES; i++)
-    {
-        ESP_LOGI(TAG_BODY, "Device %d:\tserial = %s\tmac = %" PRIu64, (i + 1), paired_devices[i].serial, paired_devices[i].mac);
-    }
-}
+// static void debug_nvs(void)
+// {
+//     ESP_LOGI(TAG_BODY, "Station credentials:");
+//     ESP_LOGI(TAG_BODY, "SSID = %s", station_cerdentials.ssid);
+//     ESP_LOGI(TAG_BODY, "PSSWD = %s", station_cerdentials.psswd);
+//     ESP_LOGI(TAG_BODY, "Paired devices credentials:");
+//     for (int i = 0; i < NUMBER_OF_DEVICES; i++)
+//     {
+//         ESP_LOGI(TAG_BODY, "Device %d:\tserial = %s\tmac = %" PRIu64, (i + 1), paired_devices[i].serial, paired_devices[i].mac);
+//     }
+// }
 
 esp_err_t memory_setup(void)
 {
     esp_err_t err = ESP_OK;
     ESP_ERROR_CHECK(init_nvs_partitions());
 
-    ESP_ERROR_CHECK(err = get_master_serial_number_from_nvs(master_device.serial));
+    char serial[SERIAL_NUMBER_SIZE] = "";
+    ESP_ERROR_CHECK(err = get_master_serial_number_from_nvs(serial));
     if (err == ESP_OK){
         ESP_LOGI(TAG_BODY, "Serial number extracted from nvs...");
     }
 
     uint8_t mac[6];
     ESP_ERROR_CHECK(esp_efuse_mac_get_default(mac));
-    mac_8_64(mac, &master_device.mac);
     if (err == ESP_OK){
         ESP_LOGI(TAG_BODY, "MAC address extracted...");
     }
 
-    err = get_wifi_sm_cred_from_nvs(station_cerdentials.ssid, station_cerdentials.psswd);
-    if (err == ESP_OK){
-        ESP_LOGI(TAG_BODY, "WIFI station credentialse extracted from nvs...");
-    }
+    set_master_device(serial, mac);
+
+    memory_update();
+
+    return err;
+}
+
+esp_err_t memory_update(void)
+{
+    esp_err_t err = ESP_OK;
+
+    device_t paired_devices[NUMBER_OF_DEVICES];
+    slave_device_t devices[NUMBER_OF_DEVICES] = {0};
 
     err = get_paired_devices_from_nvs(paired_devices);
     if (err == ESP_OK){
         ESP_LOGI(TAG_BODY, "Paired devices credentials extracted from nvs...");
     }
 
+    for (int i = 0; i < NUMBER_OF_DEVICES; i++)
+    {
+
+        devices[i].new_data = false;
+
+        if (paired_devices[i].mac)
+        {
+            devices[i].active = true;
+
+            strcpy(devices[i].serial_number, paired_devices[i].serial);
+
+            uint8_t mac[6];
+            mac_64_8(paired_devices[i].mac, mac);
+            memcpy(devices[i].mac_address, mac, 6);
+        }
+        else
+        {
+            devices[i].active = false;
+        }
+    }
+    set_slave_devices(devices);
+
     return err;
 }
-
-// esp_err_t activate_setup_mode(void)
-// {
-//     wifi_set_ap_setup(true);
-//     wifi_update();
-// }
 
 void mac_8_64(const uint8_t input[6], uint64_t *output)
 {

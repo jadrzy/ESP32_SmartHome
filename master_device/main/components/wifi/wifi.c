@@ -36,6 +36,7 @@ static wifi_flags_t flags = {0};
 static esp_netif_t *esp_netif_ap;
 static esp_netif_t *esp_netif_sta;
 
+
 static wifi_config_t wifi_sta_config = {
     .sta = {
         .scan_method = WIFI_ALL_CHANNEL_SCAN,
@@ -60,7 +61,7 @@ wifi_config_t wifi_ap_config = {
 
 
 // SUPPORT FUNCTIONS
-static void mac_64_str(uint64_t u64, char *str)
+void mac_64_str(const uint64_t u64, char *str)
 {
     char buffer[3] = "\0";
     char string_buffer[18] = "\0";
@@ -108,14 +109,14 @@ static void wifi_event_handler(void *arg, esp_event_base_t event_base,
     // STA CONNECTED 
     else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_CONNECTED) 
     {
-        ESP_LOGI(TAG_WIFI, "Station connected, SSID=%s ...", get_station_cred().ssid);
+        ESP_LOGI(TAG_WIFI, "Station connected...");
         flags.sta_connected = 1;
     } 
 
     // STA DISCONNECTED
     else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_DISCONNECTED) 
     {
-        ESP_LOGI(TAG_WIFI, "Station disconnected, SSID=%s ...", get_station_cred().ssid);
+        ESP_LOGI(TAG_WIFI, "Station disconnected...");
         flags.sta_connected = 0;
         esp_wifi_connect();
     } 
@@ -131,10 +132,16 @@ static void wifi_event_handler(void *arg, esp_event_base_t event_base,
 static esp_netif_t *wifi_init_ap(void)
 {
     char ssid_ap[33]; 
-    strcpy(ssid_ap, get_master_device_cred().serial);
     char psswd_ap[65];
-    uint64_t mac_address = get_master_device_cred().mac;
+
+    char serial[SERIAL_NUMBER_SIZE];
+    uint8_t mac[6];
+    uint64_t mac_address;
+
+    get_master_device(serial, mac);
+    mac_8_64(mac, &mac_address);
     mac_64_str(mac_address, psswd_ap);
+    strcpy(ssid_ap, serial);
 
     strcpy((char *) wifi_ap_config.ap.ssid, ssid_ap);    
     strcpy((char *) wifi_ap_config.ap.password, psswd_ap);    
@@ -157,10 +164,15 @@ static esp_netif_t *wifi_init_ap(void)
 
 static esp_netif_t *wifi_init_sta(void)
 {
-    strcpy((char *) wifi_sta_config.sta.ssid, get_station_cred().ssid);
-    strcpy((char *) wifi_sta_config.sta.password, get_station_cred().psswd);
 
-    // For safety (casting char *)
+    char ssid[32] = "";
+    char psswd[64] = "";
+
+    ESP_ERROR_CHECK(get_wifi_sm_cred_from_nvs(ssid, psswd));
+    strcpy((char *) wifi_sta_config.sta.ssid, ssid); 
+    strcpy((char *) wifi_sta_config.sta.password, psswd);
+
+   // For safety (casting char *)
     wifi_sta_config.sta.ssid[31] = '\0';
     wifi_sta_config.sta.password[63] = '\0';
 
@@ -236,6 +248,28 @@ esp_err_t wifi_init()
     }
     return err;
 }
+
+// static esp_err_t peer_list_setup(void)
+// {
+//     esp_err_t err = ESP_OK;
+//     peers_count = 0;
+//     const device_t *ptr;
+//     get_paired_devices(ptr);
+//
+//     for (int i = 0; i < NUMBER_OF_DEVICES; i++)
+//     {
+//         if ((ptr + i)->active)
+//         {
+//             peers[peers_count].id = i;
+//             mac_64_8((ptr + i)->mac, peers[peers_count].mac);
+//             peers_count++;
+//         }
+//     }
+//
+//
+//
+//     return err;
+// }
 
 esp_err_t my_esp_now_init(void)
 {
