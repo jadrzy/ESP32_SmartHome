@@ -25,8 +25,19 @@
 #include "esp_crc.h"
 #include "components/components.h"
 
+
+typedef struct {
+    unsigned int setup_mode : 1;
+    unsigned int wifi_initialized : 1;
+    unsigned int esp_now_initiated : 1;
+    unsigned int sta_connected : 1;
+    unsigned int ap_connected : 1;
+} wifi_flags_t;
+
+
 esp_err_t wifi_init();
-void wifi_update(void);
-void wifi_set_ap_setup(bool state);
+esp_err_t my_esp_now_init(void);
+
+void wifi_reboot(void);
 
 #endif
