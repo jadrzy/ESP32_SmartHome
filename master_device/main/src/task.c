@@ -1,5 +1,4 @@
 #include "task.h"
-#include "freertos/idf_additions.h"
 
 static const char TAG_TASK[] = "TASK";
 
