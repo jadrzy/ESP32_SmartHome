@@ -1,3 +1,10 @@
+#ifndef WIFI_HEADER
+#define WIFI_HEADER
+
+#include "include/components.h"
+#include "include/data.h"
+#include "include/nvs.h"
+
 #include <stdint.h>
 #include <stdlib.h>
 #include <time.h>
@@ -20,11 +27,7 @@
 #include "esp_mac.h"
 #include "esp_now.h"
 #include "esp_crc.h"
-#include "components/components.h"
-#include "components/data/data.h"
 
-#ifndef WIFI_HEADER
-#define WIFI_HEADER
 
 
 
