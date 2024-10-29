@@ -1,6 +1,6 @@
 #include "main.h"
 
-#define TAG "Master Device"
+static const char TAG_MAIN[] = "MAIN";
 
 void app_main(void)
 {
