@@ -1,32 +1,4 @@
 #include "wifi.h"
-#include "components/nvs/nvs.h"
-#include "esp_err.h"
-#include "esp_event_base.h"
-#include "esp_now.h"
-#include "esp_wifi.h"
-#include "esp_wifi_types_generic.h"
-#include <stdint.h>
-#include <stdio.h>
-#include <string.h>
-
-#include <string.h>
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
-#include "freertos/event_groups.h"
-#include "esp_mac.h"
-#include "esp_wifi.h"
-#include "esp_event.h"
-#include "esp_log.h"
-#include "esp_netif_net_stack.h"
-#include "esp_netif.h"
-#include "lwip/def.h"
-#include "nvs_flash.h"
-#include "lwip/inet.h"
-#include "lwip/netdb.h"
-#include "lwip/sockets.h"
-#include "lwip/lwip_napt.h"
-#include "lwip/err.h"
-#include "lwip/sys.h"
 
 
 static const char *TAG_WIFI = "WIFI";
