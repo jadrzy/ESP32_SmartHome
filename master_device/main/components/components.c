@@ -6,9 +6,12 @@
 #include "esp_mac.h"
 #include "esp_wifi_netif.h"
 #include "esp_wifi_types_generic.h"
+#include "master_device.h"
 #include <stdint.h>
 #include <string.h>
 #include <inttypes.h>
+
+
 
 static const char TAG_BODY[] = "BODY";
 

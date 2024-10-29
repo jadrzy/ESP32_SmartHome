@@ -1,4 +1,5 @@
 #include "master_device.h"
+#include "components/components.h"
 #include "esp_err.h"
 #include "esp_log.h"
 #include "components/nvs/nvs.h"

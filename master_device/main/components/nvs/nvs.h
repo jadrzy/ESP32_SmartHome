@@ -1,18 +1,19 @@
-#ifndef PARTITIONS_HEADER
-#define PARTITIONS_HEADER
-
+#include "components/components.h"
 #include <stdint.h>
 #include <ctype.h>
 #include <stdio.h>
 #include <string.h>
 #include "esp_err.h"
 #include "esp_log.h"
-#include "components/components.h"
 #include "esp_mac.h"
 #include "nvs_flash.h"
 #include "esp_partition.h"
 #include "master_device.h"
 #include "nvs_flash.h"
+
+#ifndef PARTITIONS_HEADER
+#define PARTITIONS_HEADER
+
 
 // Function declarations
 esp_err_t init_nvs_partitions(void);
