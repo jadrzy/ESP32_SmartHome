@@ -1,4 +1,10 @@
-#include "components/components.h"
+#ifndef PARTITIONS_HEADER
+#define PARTITIONS_HEADER
+
+#include "include/components.h"
+#include "include/data.h"
+#include "include/wifi.h"
+
 #include <stdint.h>
 #include <ctype.h>
 #include <stdio.h>
@@ -8,11 +14,6 @@
 #include "esp_mac.h"
 #include "nvs_flash.h"
 #include "esp_partition.h"
-#include "master_device.h"
-#include "nvs_flash.h"
-
-#ifndef PARTITIONS_HEADER
-#define PARTITIONS_HEADER
 
 
 // Function declarations
