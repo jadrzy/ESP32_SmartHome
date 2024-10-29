@@ -1,5 +1,8 @@
 #include "data.h"
 
+static const char TAG_DATA[] = "DATA";
+
+
 // MASTER DEVICE
 static master_device_t master_device;
 
