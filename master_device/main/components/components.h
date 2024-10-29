@@ -16,10 +16,6 @@
 #include "nvs/nvs.h"
 #include <stdint.h>
 
-typedef struct {
-    char serial[SERIAL_NUMBER_SIZE];
-    uint64_t mac;
-} device_t;
 
 esp_err_t memory_setup(void);
 esp_err_t memory_update(void);
