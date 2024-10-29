@@ -7,9 +7,9 @@
 #include <string.h>
 #include "esp_err.h"
 #include "esp_log.h"
+#include "components/components.h"
 #include "esp_mac.h"
 #include "nvs_flash.h"
-#include "components/components.h"
 #include "esp_partition.h"
 #include "master_device.h"
 #include "nvs_flash.h"

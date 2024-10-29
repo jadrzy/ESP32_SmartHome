@@ -1,7 +1,11 @@
-#include "components/components.h"
-#include <stdint.h>
 #ifndef DATA_HEADER
 #define DATA_HEADER
+
+#include "components/components.h"
+#include "components/wifi/wifi.h"
+#include "components/nvs/nvs.h"
+#include <stdint.h>
+#include <string.h>
 
 typedef struct {
 

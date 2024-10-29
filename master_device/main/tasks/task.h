@@ -18,11 +18,11 @@
 
 #define WIFI_REINIT_INTERVAL (5000 / portTICK_PERIOD_MS)
 
-
-typedef struct {
-    TaskHandle_t wifi_setup; 
-} my_task_handles_t;
-
+//
+// typedef struct {
+//     TaskHandle_t wifi_setup; 
+// } my_task_handles_t;
+//
 
 
 #endif

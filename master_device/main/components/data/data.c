@@ -1,7 +1,4 @@
 #include "data.h"
-#include "components/nvs/nvs.h"
-#include <stdint.h>
-#include <string.h>
 
 // MASTER DEVICE
 static master_device_t master_device;

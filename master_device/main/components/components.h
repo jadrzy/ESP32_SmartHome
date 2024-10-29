@@ -2,9 +2,19 @@
 #define COMPONENTS_HEADER
 
 #include "esp_err.h"
+#include "components/nvs/nvs.h"
+#include "components/wifi/wifi.h"
+#include "components/data/data.h"
+#include "esp_err.h"
+#include "esp_log.h"
+#include "esp_mac.h"
+#include "esp_wifi_netif.h"
+#include "esp_wifi_types_generic.h"
+#include <stdint.h>
+#include <string.h>
+#include <inttypes.h>
 #include "nvs/nvs.h"
 #include <stdint.h>
-#include "components/data/data.h"
 
 // Constants
 #define SERIAL_NUMBER_SIZE 13

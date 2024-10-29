@@ -258,3 +258,4 @@ esp_err_t write_paired_devices_to_nvs(device_t device_list[NUMBER_OF_DEVICES])
     nvs_close(my_handle_mac);
     return err;
 }
+
