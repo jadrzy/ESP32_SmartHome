@@ -1,11 +1,6 @@
 #ifndef COMPONENTS_HEADER
 #define COMPONENTS_HEADER
 
-// Constants
-#define SERIAL_NUMBER_SIZE 13
-#define NUMBER_OF_DEVICES 10
-#define WIFI_CREDENTIALS_SIZE 33 
-
 #include "esp_err.h"
 #include "components/nvs/nvs.h"
 #include "components/wifi/wifi.h"
