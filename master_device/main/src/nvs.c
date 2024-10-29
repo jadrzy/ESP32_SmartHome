@@ -1,6 +1,4 @@
 #include "nvs.h"
-#include "esp_log.h"
-#include <stdint.h>
 
 static const char TAG_NVS[] = "NVS";
 
