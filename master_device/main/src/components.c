@@ -1,17 +1,4 @@
 #include "components.h"
-#include "components/nvs/nvs.h"
-#include "components/wifi/wifi.h"
-#include "esp_err.h"
-#include "esp_log.h"
-#include "esp_mac.h"
-#include "esp_wifi_netif.h"
-#include "esp_wifi_types_generic.h"
-#include "master_device.h"
-#include <stdint.h>
-#include <string.h>
-#include <inttypes.h>
-
-
 
 static const char TAG_BODY[] = "BODY";
 
