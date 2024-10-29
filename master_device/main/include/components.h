@@ -1,7 +1,10 @@
-#include "esp_err.h"
-#include "components/nvs/nvs.h"
-#include "components/wifi/wifi.h"
-#include "components/data/data.h"
+#ifndef COMPONENTS_HEADER
+#define COMPONENTS_HEADER
+
+#include "include/data.h"
+#include "include/nvs.h"
+#include "include/wifi.h"
+
 #include "esp_err.h"
 #include "esp_log.h"
 #include "esp_mac.h"
@@ -10,11 +13,6 @@
 #include <stdint.h>
 #include <string.h>
 #include <inttypes.h>
-#include "nvs/nvs.h"
-#include <stdint.h>
-
-#ifndef COMPONENTS_HEADER
-#define COMPONENTS_HEADER
 
  
 // Constants
