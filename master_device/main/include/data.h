@@ -1,33 +1,29 @@
-#include "components/components.h"
-#include "components/wifi/wifi.h"
-#include "components/nvs/nvs.h"
+#ifndef DATA_HEADER
+#define DATA_HEADER
+
+#include "include/components.h"
+#include "include/nvs.h"
+#include "include/wifi.h"
+
 #include <stdint.h>
 #include <string.h>
 #include <stdbool.h>
 
-#ifndef DATA_HEADER
-#define DATA_HEADER
-
 
 typedef struct {
-
     char serial_number[SERIAL_NUMBER_SIZE];
     uint8_t mac_address[6];
-
 } master_device_t;
 
 
 typedef struct {
-
     // ID SECTION
     bool active;
     char serial_number[SERIAL_NUMBER_SIZE];
     uint8_t mac_address[6];
-
     // DATA SECTION
     bool new_data;
     uint64_t data_buffer;
-
 } slave_device_t;
 
 
