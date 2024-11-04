@@ -1,6 +1,7 @@
 #ifndef DATA_HEADER
 #define DATA_HEADER
 
+#include "include/constants.h"
 #include "include/components.h"
 #include "include/nvs.h"
 #include "include/wifi.h"
@@ -30,5 +31,8 @@ typedef struct {
 
 void get_master_device(char serial[SERIAL_NUMBER_SIZE], uint8_t mac[6]);
 void set_master_device(const char serial[SERIAL_NUMBER_SIZE], const uint8_t mac[6]);
+
+void get_slave_devices(slave_device_t devices[NUMBER_OF_DEVICES]);
 void set_slave_devices(slave_device_t devices[NUMBER_OF_DEVICES]);
+
 #endif 

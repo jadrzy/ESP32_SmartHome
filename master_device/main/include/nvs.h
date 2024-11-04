@@ -1,6 +1,8 @@
 #ifndef PARTITIONS_HEADER
 #define PARTITIONS_HEADER
 
+
+#include "include/constants.h"
 #include "include/components.h"
 #include "include/data.h"
 #include "include/wifi.h"
@@ -21,7 +23,7 @@ esp_err_t init_nvs_partitions(void);
 esp_err_t get_master_serial_number_from_nvs(char *number);
 esp_err_t get_wifi_sm_cred_from_nvs(char * SSID, char * PSSWD);
 esp_err_t write_wifi_sm_cred_to_nvs(char * SSID,char * PSSWD);
-esp_err_t get_paired_devices_from_nvs(device_t device_list[NUMBER_OF_DEVICES]);
-esp_err_t write_paired_devices_to_nvs(device_t device_list[NUMBER_OF_DEVICES]);
+esp_err_t get_paired_devices_from_nvs(uint64_t mac_device_list[NUMBER_OF_DEVICES], char serial_device_list[SERIAL_NUMBER_SIZE][NUMBER_OF_DEVICES]);
+esp_err_t write_paired_devices_to_nvs(uint64_t mac_device_list[NUMBER_OF_DEVICES], char serial_device_list[SERIAL_NUMBER_SIZE][NUMBER_OF_DEVICES]);
 
 #endif // PARTITIONS_HEADER

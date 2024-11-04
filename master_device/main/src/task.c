@@ -1,6 +1,6 @@
-#include "task.h"
+#include "include/task.h"
 
-static const char TAG_TASK[] = "TASK";
+// static const char TAG_TASK[] = "TASK";
 
 // static my_task_handles_t task_handles;
 // static int wifi_setup_status = true;
@@ -28,4 +28,3 @@ static const char TAG_TASK[] = "TASK";
 //         ESP_LOGI(TAG_TASK, "Wifi setup task initialized with mode = %d", *wifi_setup_mode);
 //     else 
 //         ESP_LOGE(TAG_TASK, "Wifi setup task error with mode = %d", *wifi_setup_mode);
-/ }

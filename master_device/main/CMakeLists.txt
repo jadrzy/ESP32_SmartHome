@@ -1,11 +1,11 @@
 idf_component_register(
     SRCS 
         "src/main.c"
-        "srctask.c"
+        "src/task.c"
+        "src/components.c"
         "src/data.c"
         "src/wifi.c"
         "src/nvs.c"
-        "src/components.c"
     INCLUDE_DIRS 
         "."
 )

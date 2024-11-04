@@ -11,7 +11,6 @@
 
 
 #include "esp_err.h"
-#include <tasks/task.h>
 #include "freertos/idf_additions.h"
 #include "nvs_flash.h"
 #include <stdio.h>

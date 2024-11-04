@@ -1,6 +1,7 @@
 #ifndef WIFI_HEADER
 #define WIFI_HEADER
 
+#include "include/constants.h"
 #include "include/components.h"
 #include "include/data.h"
 #include "include/nvs.h"

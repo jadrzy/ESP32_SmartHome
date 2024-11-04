@@ -1,6 +1,7 @@
 #ifndef COMPONENTS_HEADER
 #define COMPONENTS_HEADER
 
+#include "include/constants.h"
 #include "include/data.h"
 #include "include/nvs.h"
 #include "include/wifi.h"
@@ -14,16 +15,6 @@
 #include <string.h>
 #include <inttypes.h>
 
- 
-// Constants
-#define SERIAL_NUMBER_SIZE 13
-#define NUMBER_OF_DEVICES 10
-#define WIFI_CREDENTIALS_SIZE 33 
-
-typedef struct {
-    char serial[SERIAL_NUMBER_SIZE];
-    uint64_t mac;
-} device_t;
 
 esp_err_t memory_setup(void);
 esp_err_t memory_update(void);

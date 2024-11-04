@@ -1,7 +1,18 @@
-#include "wifi.h"
+#include "include/wifi.h"
+#include "esp_log.h"
+#include "esp_mac.h"
+#include "esp_now.h"
+#include "esp_wifi_types_generic.h"
+#include "include/components.h"
+#include "include/data.h"
+#include "include/nvs.h"
+#include <stdint.h>
+#include <string.h>
 
 
 static const char *TAG_WIFI = "WIFI";
+
+static esp_now_peer_info_t peer_list[NUMBER_OF_DEVICES];
 
 static wifi_flags_t flags = {0};
 
@@ -221,27 +232,37 @@ esp_err_t wifi_init()
     return err;
 }
 
-// static esp_err_t peer_list_setup(void)
-// {
-//     esp_err_t err = ESP_OK;
-//     peers_count = 0;
-//     const device_t *ptr;
-//     get_paired_devices(ptr);
-//
-//     for (int i = 0; i < NUMBER_OF_DEVICES; i++)
-//     {
-//         if ((ptr + i)->active)
-//         {
-//             peers[peers_count].id = i;
-//             mac_64_8((ptr + i)->mac, peers[peers_count].mac);
-//             peers_count++;
-//         }
-//     }
-//
-//
-//
-//     return err;
-// }
+
+static esp_err_t peer_list_setup(void)
+{
+    esp_err_t err = ESP_OK;
+    int peers_count = 0;
+
+    slave_device_t device_list[NUMBER_OF_DEVICES];
+    get_slave_devices(device_list);
+
+
+    for (int i = 0; i < NUMBER_OF_DEVICES; i++)
+    {
+        uint64_t mac;
+        mac_8_64(device_list[i].mac_address, &mac);
+        ESP_LOGI(TAG_WIFI, "DEVICE: id=%d, active=%d, serial=%s, mac=%" PRIu64, i, device_list[i].active, device_list[i].serial_number, mac);
+    }
+
+
+    for (int i = 0; i < NUMBER_OF_DEVICES; i++)
+    {
+        if (device_list[i].active)
+        {
+            peer_list[peers_count].ifidx = WIFI_IF_STA;
+            peer_list[peers_count].channel = 0;
+            memcpy(peer_list[peers_count].peer_addr, device_list[i].mac_address, sizeof(device_list[i].mac_address));
+            esp_now_add_peer(&peer_list[peers_count]);
+            peers_count++;
+        }
+    }
+    return err;
+}
 
 esp_err_t my_esp_now_init(void)
 {
@@ -254,8 +275,11 @@ esp_err_t my_esp_now_init(void)
         ESP_ERROR_CHECK(esp_now_init());
         ESP_LOGI(TAG_WIFI, "ESP_NOW INITIALIZATION...");
 
+        peer_list_setup();
+           
+
             // ESP_ERROR_CHECK(esp_now_register_recv_cb(esp_now_recv_cb_t cb)) 
-            // ESP_ERROR_CHECK(esp_now_register_send_cb(esp_now_recv_cb_t cb)) 
+            // ESP_ERROR_CHECK(esp_now_register_send_cb(esp_now_send_cb_t cb)) 
 
         flags.esp_now_initiated = 1;
     }

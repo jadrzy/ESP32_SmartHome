@@ -1,4 +1,4 @@
-#include "nvs.h"
+#include "include/nvs.h"
 
 static const char TAG_NVS[] = "NVS";
 
@@ -120,7 +120,6 @@ esp_err_t get_wifi_sm_cred_from_nvs(char * SSID, char * PSSWD)
 }
 
 
-
 esp_err_t write_wifi_sm_cred_to_nvs(char * SSID,char * PSSWD)
 {
     esp_err_t err = ESP_OK;
@@ -149,7 +148,7 @@ esp_err_t write_wifi_sm_cred_to_nvs(char * SSID,char * PSSWD)
 }
 
 
-esp_err_t get_paired_devices_from_nvs(device_t device_list[NUMBER_OF_DEVICES])
+esp_err_t get_paired_devices_from_nvs(uint64_t mac_device_list[NUMBER_OF_DEVICES], char serial_device_list[SERIAL_NUMBER_SIZE][NUMBER_OF_DEVICES])
 {
     esp_err_t err = ESP_OK;
     nvs_handle_t my_handle_serial;
@@ -171,7 +170,6 @@ esp_err_t get_paired_devices_from_nvs(device_t device_list[NUMBER_OF_DEVICES])
 
     char serial_string[SERIAL_NUMBER_SIZE]; 
     uint64_t mac_address;
-    device_t *ptr = device_list;
 
     for (int i = 1; i <= NUMBER_OF_DEVICES; i++) {
         char key_serial[12] = "serial_00";  // Adjust key size for proper usage
@@ -188,7 +186,7 @@ esp_err_t get_paired_devices_from_nvs(device_t device_list[NUMBER_OF_DEVICES])
 
         // Remove the newline character if present
         serial_string[strcspn(serial_string, "\n")] = '\0';
-        strcpy((ptr + i - 1)->serial, serial_string);
+        strcpy(serial_device_list[i - 1], serial_string);
 
         // Get mac address
         char key_mac[9] = "mac_00";  // Adjust key size for proper usage
@@ -198,7 +196,7 @@ esp_err_t get_paired_devices_from_nvs(device_t device_list[NUMBER_OF_DEVICES])
         err = nvs_get_u64(my_handle_mac, key_mac, &mac_address);
         ESP_ERROR_CHECK(err);
 
-        (ptr + i -1)->mac = mac_address;
+        mac_device_list[i - 1] = mac_address;
     }
 
     nvs_close(my_handle_serial);
@@ -206,7 +204,7 @@ esp_err_t get_paired_devices_from_nvs(device_t device_list[NUMBER_OF_DEVICES])
     return err;
 }
 
-esp_err_t write_paired_devices_to_nvs(device_t device_list[NUMBER_OF_DEVICES])
+esp_err_t write_paired_devices_to_nvs(uint64_t mac_device_list[NUMBER_OF_DEVICES], char serial_device_list[SERIAL_NUMBER_SIZE][NUMBER_OF_DEVICES])
 {
     esp_err_t err = ESP_OK;
     nvs_handle_t my_handle_serial;
@@ -225,14 +223,13 @@ esp_err_t write_paired_devices_to_nvs(device_t device_list[NUMBER_OF_DEVICES])
         ESP_LOGE(TAG_NVS, "Error (%s) opening NVS handle!\n", esp_err_to_name(err));
         return err;
     }
-    device_t *ptr = device_list;
 
     for (int i = 1; i <= NUMBER_OF_DEVICES; i++) {
         char key_s[12] = "serial_00";  // Adjust key size for proper usage
         snprintf(&key_s[7], sizeof(key_s) - 7, "%02d", i); // Generate key
 
         // Write the serial number to NVS
-        err = nvs_set_str(my_handle_serial, key_s, (ptr + i -1)->serial);
+        err = nvs_set_str(my_handle_serial, key_s, serial_device_list[i - 1]);
         ESP_ERROR_CHECK(err);
 
         // Commit the changes
@@ -244,7 +241,7 @@ esp_err_t write_paired_devices_to_nvs(device_t device_list[NUMBER_OF_DEVICES])
         snprintf(&key_m[4], sizeof(key_m) - 4, "%02d", i); // Generate key
 
         // Write the mac address to NVS
-        err = nvs_set_u64(my_handle_mac, key_m, (ptr + i -1)->mac);
+        err = nvs_set_u64(my_handle_mac, key_m, mac_device_list[i - 1]);
         ESP_ERROR_CHECK(err);
 
         // Commit the changes
