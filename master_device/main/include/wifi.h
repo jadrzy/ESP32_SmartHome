@@ -48,9 +48,26 @@ typedef struct {
     unsigned int ap_connected : 1;
 } wifi_flags_t;
 
+typedef struct {
+    uint8_t mac_address[6];
+    char serial[SERIAL_NUMBER_SIZE];
+    bool auto_light;
+    int light_value;
+} send_data_t;
+
+typedef struct {
+    uint8_t mac_address[6];
+    char serial[SERIAL_NUMBER_SIZE];
+    double lux;
+    double humidity;
+    double pressure;
+    double temperature; 
+} recv_data_t;
+
 
 esp_err_t wifi_init();
 esp_err_t my_esp_now_init(void);
+esp_err_t send_espnow_data(send_data_t data);
 
 void wifi_reboot(void);
 

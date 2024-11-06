@@ -23,9 +23,14 @@ typedef struct {
     SemaphoreHandle_t xMutex_light_control;
 } semaphore_handles_t;
 
+typedef struct {
+    TaskHandle_t recv_queue;
+
+} task_handles_t;
+
 QueueHandle_t get_rcv_data_handle(void);
 
-void get_semaphores(semaphore_handles_t * sem);
 esp_err_t recv_queue_task_init(void);
+semaphore_handles_t* get_semaphores(void);
 
 #endif

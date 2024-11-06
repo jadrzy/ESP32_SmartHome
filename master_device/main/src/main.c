@@ -20,9 +20,10 @@ void app_main(void)
     ESP_ERROR_CHECK(recv_queue_task_init());
 
     get_slave_devices(devices);
-    strcpy(data.serial_number, devices[0].serial_number);
+    strcpy(data.serial, devices[0].serial_number);
     memcpy(data.mac_address, devices[0].mac_address, sizeof(data.mac_address));
-    data.light_control = devices[0].light_control;
+    data.auto_light = devices[0].light_control.auto_light;
+    data.light_value = devices[0].light_control.light_value;
 
     ESP_ERROR_CHECK(wifi_init());
     ESP_ERROR_CHECK(my_esp_now_init());

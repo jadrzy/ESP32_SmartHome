@@ -271,13 +271,13 @@ static EventGroupHandle_t esp_now_evt_group;
 
 static void esp_now_recv_cb(const esp_now_recv_info_t *recv_info, const uint8_t *data, int len)
 {
-    static recieve_data_t recieve_data;
+    static recv_data_t recieve_data;
 
     ESP_LOGI(TAG_WIFI, "%d bytes incoming from " MACSTR, len, MAC2STR(recv_info->src_addr));
 
     if(len != sizeof(recieve_data))
     {
-        ESP_LOGE(TAG_WIFI, "Unexpected data length: %d != %u", len, (int) sizeof(recieve_data_t));
+        ESP_LOGE(TAG_WIFI, "Unexpected data length: %d != %u", len, (int) sizeof(recv_data_t));
         return;
     }
 
@@ -329,7 +329,7 @@ esp_err_t my_esp_now_init(void)
 }
 
 
-esp_err_t send_espnow_data(send_data_t data)
+ esp_err_t send_espnow_data(send_data_t data)
 {
     esp_err_t err = ESP_OK;
 

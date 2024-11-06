@@ -56,8 +56,8 @@ esp_err_t set_slave_device_sensor(const uint8_t mac_address[6], const char seria
 
                 if (!diff)
                 {
-                    semaphore_handles_t *sem;
-                    get_semaphores(sem);
+                    semaphore_handles_t *sem = NULL;
+                    sem = get_semaphores();
                     if (xSemaphoreTake(sem->xMutex_sensor_data, 10) == pdTRUE)
                     {
                         slave_devices[i].sensor_data = data;
