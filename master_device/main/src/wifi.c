@@ -1,11 +1,14 @@
 #include "include/wifi.h"
+#include "esp_err.h"
 #include "esp_log.h"
 #include "esp_mac.h"
 #include "esp_now.h"
 #include "esp_wifi_types_generic.h"
+#include "freertos/idf_additions.h"
 #include "include/components.h"
 #include "include/data.h"
 #include "include/nvs.h"
+#include "include/task.h"
 #include <stdint.h>
 #include <string.h>
 
@@ -264,6 +267,44 @@ static esp_err_t peer_list_setup(void)
     return err;
 }
 
+static EventGroupHandle_t esp_now_evt_group;
+
+static void esp_now_recv_cb(const esp_now_recv_info_t *recv_info, const uint8_t *data, int len)
+{
+    static recieve_data_t recieve_data;
+
+    ESP_LOGI(TAG_WIFI, "%d bytes incoming from " MACSTR, len, MAC2STR(recv_info->src_addr));
+
+    if(len != sizeof(recieve_data))
+    {
+        ESP_LOGE(TAG_WIFI, "Unexpected data length: %d != %u", len, (int) sizeof(recieve_data_t));
+        return;
+    }
+
+    memcpy(&recieve_data, data, len);
+
+    if (*recieve_data.mac_address != *recv_info->src_addr)
+    {
+        ESP_LOGI(TAG_WIFI, "ESP-NOW recieve data error. MAC does not match");
+        return;
+    }
+
+    if (xQueueSend(get_rcv_data_handle(), &recieve_data, 0) != pdTRUE) {
+        ESP_LOGW(TAG_WIFI, "Queue full, discarded");
+        return;
+    }
+
+}
+
+static void esp_now_sent_cb(const uint8_t *mac_addr, esp_now_send_status_t status)
+{
+    if (mac_addr == NULL) {
+        ESP_LOGE(TAG_WIFI, "ESP-NOW send data error...");
+        return;
+    }
+    xEventGroupSetBits(esp_now_evt_group, BIT(status));
+}
+
 esp_err_t my_esp_now_init(void)
 {
     esp_err_t err = ESP_OK;
@@ -278,12 +319,59 @@ esp_err_t my_esp_now_init(void)
         peer_list_setup();
            
 
-            // ESP_ERROR_CHECK(esp_now_register_recv_cb(esp_now_recv_cb_t cb)) 
-            // ESP_ERROR_CHECK(esp_now_register_send_cb(esp_now_send_cb_t cb)) 
+        ESP_ERROR_CHECK(esp_now_register_recv_cb(esp_now_recv_cb));
+        ESP_ERROR_CHECK(esp_now_register_send_cb(esp_now_sent_cb));
 
         flags.esp_now_initiated = 1;
     }
 
     return err;
+}
+
+
+esp_err_t send_espnow_data(send_data_t data)
+{
+    esp_err_t err = ESP_OK;
+
+    // Peer validation
+    if (!esp_now_is_peer_exist(data.mac_address))
+    {
+        ESP_LOGI(TAG_WIFI, "Error, peer does not exists" MACSTR, MAC2STR(data.mac_address));
+        err = ESP_NOW_SEND_FAIL;
+        return err;
+    }
+
+    // Send it
+    ESP_LOGI(TAG_WIFI, "Sending data request to " MACSTR, MAC2STR(data.mac_address));
+    err = esp_now_send(data.mac_address, (uint8_t*)&data, sizeof(data));
+    if(err != ESP_OK)
+    {
+        ESP_LOGE(TAG_WIFI, "Send error (%d)", err);
+        return err;
+    }
+
+    // Wait for callback function to set status bit
+    EventBits_t bits = xEventGroupWaitBits(
+        esp_now_evt_group, 
+        BIT(ESP_NOW_SEND_SUCCESS) | BIT(ESP_NOW_SEND_FAIL), 
+        pdTRUE, 
+        pdFALSE, 
+        2000 / portTICK_PERIOD_MS);
+
+    if ( !(bits & BIT(ESP_NOW_SEND_SUCCESS)) )
+    {
+        if (bits & BIT(ESP_NOW_SEND_FAIL))
+        {
+            err = ESP_FAIL;
+            ESP_LOGE(TAG_WIFI, "ESP-NOW send error (%d)", err);
+            return err;
+        }
+        err = ESP_ERR_TIMEOUT;
+        ESP_LOGE(TAG_WIFI, "ESP-NOW send error (%d)", err);
+        return err;
+    }
+
+    ESP_LOGI(TAG_WIFI, "Sent!");
+    return ESP_OK;
 }
 
