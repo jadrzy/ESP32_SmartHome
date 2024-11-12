@@ -25,6 +25,25 @@ double get_pressure(void)
 }
 
 
+bool get_light_mode(void)
+{
+    return light_control.auto_light;    
+}
+
+
+int get_light_value(void)
+{
+    return light_control.light_value;    
+}
+
+
+void get_slave_device(char serial[SERIAL_NUMBER_SIZE], uint8_t mac[6])
+{
+    strcpy(serial, device_cred.serial_number);
+    memcpy(mac, device_cred.mac_address, 6);
+}
+
+
 void set_lux(double value)
 {
     sensor_data.lux = value; 
@@ -43,4 +62,20 @@ void set_humidity(double value)
 void set_pressure(double value)
 {
     sensor_data.pressure = value;
+}
+
+void set_light_mode(bool mode)
+{
+    light_control.auto_light = mode;    
+}
+
+void set_light_value(int value)
+{
+    light_control.light_value = value;
+}
+
+void set_slave_device(const char serial[SERIAL_NUMBER_SIZE], const uint8_t mac[6]);
+{
+    strcpy(device_cred.serial_number, serial);
+    memcpy(device_cred.mac_address, mac, 6);
 }
