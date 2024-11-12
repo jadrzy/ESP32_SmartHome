@@ -1,7 +1,7 @@
 #include "nvs.h"
 
 // Initialize NVS partitions has to be called before read/write
-void init_nvs_partitions(void)
+esp_err_t init_nvs_partitions(void)
 {
     esp_err_t ret;
 
@@ -20,6 +20,7 @@ void init_nvs_partitions(void)
         ret = nvs_flash_init_partition("serial");
     }
     ESP_ERROR_CHECK(ret);
+    return err;
 }
 
 esp_err_t get_slave_serial_number_from_nvs(char *number)
