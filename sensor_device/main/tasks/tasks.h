@@ -3,6 +3,7 @@
 #include "drivers/light_sensor/light_sensor.h"
 #include "drivers/temp_hum_sensor/temp_hum_sensor.h"
 #include "drivers/pressure_sensor/pressure_sensor.h"
+#include "tasks/wifi/wifi.h"
 
 #include "freertos/projdefs.h"
 #include "freertos/idf_additions.h"
@@ -23,7 +24,9 @@ struct task_handles {
     TaskHandle_t temp_hum_task;   // Task handle for temperature & humidity sensor
     TaskHandle_t press_task;      // Task handle for pressure sensor
     TaskHandle_t wifi_task;       // Task handle for Wi-Fi task
+    TaskHandle_t recieve_data_task;
 };
+
 
 // Function to initialize all sensors
 void initialize_sensors(void);

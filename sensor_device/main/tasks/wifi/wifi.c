@@ -99,6 +99,12 @@ esp_err_t wifi_init()
 
 
 
+static QueueHandle_t recieve_data_queue;
+
+QueueHandle_t get_queue_handle(void)
+{
+    return recieve_data_queue;
+}
 
 
 
@@ -143,7 +149,7 @@ static void esp_now_recv_cb(const esp_now_recv_info_t *recv_info, const uint8_t 
     else
     {
         // activate response 
-        if (xQueueSend(get_rcv_data_handle(), &recieve_data, 0) != pdTRUE) {
+        if (xQueueSend(recieve_data_queue, &recieve_data, 0) != pdTRUE) {
             ESP_LOGW(TAG_WIFI, "Queue full, discarded");
         }
     }
@@ -166,7 +172,7 @@ esp_err_t my_esp_now_init(void)
 
     if (!flags.esp_now_initiated)
     {
-        ESP_ERROR_CHECK(esp_wifi_set_protocol(ESP_IF_WIFI_AP, WIFI_PROTOCOL_11B|WIFI_PROTOCOL_11G|WIFI_PROTOCOL_11N|WIFI_PROTOCOL_LR));
+        ESP_ERROR_CHECK(esp_wifi_set_protocol(ESP_IF_WIFI_STA, WIFI_PROTOCOL_11B|WIFI_PROTOCOL_11G|WIFI_PROTOCOL_11N|WIFI_PROTOCOL_LR));
 
         ESP_ERROR_CHECK(esp_now_init());
         ESP_LOGI(TAG_WIFI, "ESP_NOW INITIALIZATION...");
@@ -181,8 +187,7 @@ esp_err_t my_esp_now_init(void)
     return err;
 }
 
-/*
- esp_err_t send_espnow_data(send_data_t data)
+esp_err_t send_espnow_data(send_data_t data)
 {
     esp_err_t err = ESP_OK;
 
@@ -195,7 +200,7 @@ esp_err_t my_esp_now_init(void)
     }
 
     // Send it
-    ESP_LOGI(TAG_WIFI, "Sending data request to " MACSTR, MAC2STR(data.mac_address));
+    ESP_LOGI(TAG_WIFI, "Sending data to " MACSTR, MAC2STR(data.mac_address));
     err = esp_now_send(data.mac_address, (uint8_t*)&data, sizeof(data));
     if(err != ESP_OK)
     {
@@ -227,7 +232,4 @@ esp_err_t my_esp_now_init(void)
     ESP_LOGI(TAG_WIFI, "Sent!");
     return ESP_OK;
 }
-
-
-*/
 

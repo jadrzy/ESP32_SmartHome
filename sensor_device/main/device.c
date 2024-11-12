@@ -1,6 +1,5 @@
 #include "device.h"
 #include "freertos/idf_additions.h"
-#include "nvs/nvs.h"
 #include "tasks/data/data.h"
 
 

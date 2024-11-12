@@ -1,4 +1,10 @@
 #include "tasks.h"
+#include "esp_err.h"
+#include "esp_log.h"
+#include "freertos/idf_additions.h"
+#include "tasks/data/data.h"
+
+static const char TAG_TASK[] = "TASK";
 
 // Static handles for I2C and task management
 static struct i2c i2c_handles;
@@ -9,7 +15,9 @@ static SemaphoreHandle_t
     xMutex_Lux,
     xMutex_Humidity,
     xMutex_Temperature,
-    xMutex_Pressure;
+    xMutex_Pressure,
+    xMutex_Light_settings;
+
 
 // Function to initialize all sensors
 void initialize_sensors(void)
@@ -94,6 +102,90 @@ void task_fun_get_pressure_value(void *p)
     }
 }
 
+static esp_err_t handle_recv_queue_data(recv_data_t * data)
+{
+    esp_err_t err = ESP_OK;
+    //mutex
+
+    if (xSemaphoreTake(xMutex_Light_settings, 10) == pdTRUE)
+    {
+        set_light_mode(data->auto_light);
+        set_light_value(data->light_value);
+        xSemaphoreGive(xMutex_Light_settings);
+    }
+    return err;
+}
+
+static esp_err_t prepare_send_data(send_data_t *data)
+{
+    esp_err_t err = ESP_OK;
+
+    get_slave_device(data->serial, data->mac_address);
+
+    // Read and log lux value
+    if (xSemaphoreTake(xMutex_Lux, 10) == pdTRUE)
+    {
+        data->lux = get_lux();
+        xSemaphoreGive(xMutex_Lux);
+    }
+
+    // Read and log humidity value
+    if (xSemaphoreTake(xMutex_Humidity, 10) == pdTRUE)
+    {
+        data->humidity = get_humidity();
+        xSemaphoreGive(xMutex_Humidity);
+    }
+
+    // Read and log temperature value
+    if (xSemaphoreTake(xMutex_Temperature, 10) == pdTRUE)
+    {
+        data->temperature = get_temperature();
+        xSemaphoreGive(xMutex_Temperature);
+    }
+
+    // Read and log pressure value
+    if (xSemaphoreTake(xMutex_Pressure, 10) == pdTRUE)
+    {
+        data->pressure = get_pressure();
+        xSemaphoreGive(xMutex_Pressure);
+    }
+
+    return err;
+}
+
+void recv_queue_task(void *p)
+{
+    esp_err_t err = ESP_OK;
+    static recv_data_t recv_data;
+    static send_data_t send_data;  
+
+    ESP_LOGI(TAG_TASK, "Starting recieve queue task...");
+
+    while(1)
+    {
+        if(xQueueReceive(get_queue_handle(), &recv_data, portMAX_DELAY) == pdTRUE)
+        {
+            ESP_LOGI(TAG_TASK, "Data added to the queue");
+            handle_recv_queue_data(&recv_data);
+
+            ESP_LOGI(TAG_TASK, "Preparing data to be sent");
+            err = prepare_send_data(&send_data);
+            if (err != ESP_OK)
+            {
+                ESP_LOGI(TAG_TASK, "Error transforming data to be sent");
+                continue;
+            }
+
+            ESP_LOGI(TAG_TASK, "Sending data");
+            send_espnow_data(send_data);
+        }
+
+
+    }
+}
+
+
+
 // Debug task to log sensor data
 void task_debug(void *p)
 {
@@ -146,10 +238,13 @@ void initialize_tasks(void)
     xMutex_Humidity = xSemaphoreCreateMutex();
     xMutex_Temperature = xSemaphoreCreateMutex();
     xMutex_Pressure = xSemaphoreCreateMutex();
+    xMutex_Light_settings = xSemaphoreCreateMutex();
 
     // Create tasks for reading sensors and logging data
     xTaskCreate(task_fun_get_lux_value, "Get_Lux_Task", 6144, NULL, 5, &task_handles.lux_task);
     xTaskCreate(task_fun_get_temp_hum_values, "Get_Temp_Hum_Task", 6144, NULL, 5, &task_handles.temp_hum_task);
     xTaskCreate(task_fun_get_pressure_value, "Get_Pressure_Task", 6144, NULL, 5, &task_handles.press_task);
+    xTaskCreate(recv_queue_task, "Handle_rec_data", 6144, NULL, 6, &task_handles.recieve_data_task);
     xTaskCreate(task_debug, "Debug_Task", 4096, NULL, 5, NULL);
+
 }
