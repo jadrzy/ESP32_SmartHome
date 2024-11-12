@@ -39,4 +39,7 @@ void set_light_mode(bool);
 void set_light_value(int);
 void set_slave_device(const char serial[SERIAL_NUMBER_SIZE], const uint8_t mac[6]);
 
+esp_err_t memory_setup(void);
+
+
 #endif
