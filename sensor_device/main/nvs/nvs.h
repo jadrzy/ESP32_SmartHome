@@ -15,7 +15,7 @@
 #define NUMBER_OF_DEVICES 10
 
 // Function declarations
-void init_nvs_partitions(void);
+esp_err_t init_nvs_partitions(void);
 esp_err_t get_slave_serial_number_from_nvs(char *number);
 
 #endif // PARTITIONS_HEADER
