@@ -16,6 +16,6 @@
 
 // Function declarations
 void init_nvs_partitions(void);
-void get_slave_serial_number_from_nvs(char *number);
+esp_err_t get_slave_serial_number_from_nvs(char *number);
 
 #endif // PARTITIONS_HEADER
