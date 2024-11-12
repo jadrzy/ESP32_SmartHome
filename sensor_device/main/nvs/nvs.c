@@ -20,7 +20,7 @@ esp_err_t init_nvs_partitions(void)
         ret = nvs_flash_init_partition("serial");
     }
     ESP_ERROR_CHECK(ret);
-    return err;
+    return ret;
 }
 
 esp_err_t get_slave_serial_number_from_nvs(char *number)
