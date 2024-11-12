@@ -74,7 +74,7 @@ void set_light_value(int value)
     light_control.light_value = value;
 }
 
-static void set_slave_device(const char serial[SERIAL_NUMBER_SIZE], const uint8_t mac[6]);
+static void set_slave_device(const char serial[SERIAL_NUMBER_SIZE], const uint8_t mac[6])
 {
     strcpy(device_cred.serial_number, serial);
     memcpy(device_cred.mac_address, mac, 6);
