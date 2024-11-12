@@ -1,7 +1,8 @@
 #include "data.h"
 
-
-static struct data sensor_data = {0}; 
+static slave_device_t device_cred;
+static sensor_data_t sensor_data = {0};
+static light_control_t light_control = {0};
 
 double get_lux(void)
 {
