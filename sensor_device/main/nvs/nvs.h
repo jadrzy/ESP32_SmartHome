@@ -11,7 +11,7 @@
 #include "nvs_flash.h"
 
 // Constants
-#define SERIAL_NUMBER_SIZE 12
+#define SERIAL_NUMBER_SIZE 13
 #define NUMBER_OF_DEVICES 10
 
 // Function declarations
