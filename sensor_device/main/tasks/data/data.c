@@ -1,5 +1,7 @@
 #include "data.h"
 
+static const char TAG_DATA[] = "DATA";
+
 static slave_device_t device_cred;
 static sensor_data_t sensor_data = {0};
 static light_control_t light_control = {0};
@@ -88,15 +90,15 @@ esp_err_t memory_setup(void)
 
     char serial[SERIAL_NUMBER_SIZE];
 
-    ESP_ERROR_CHECK(err = get_slave_serial_number_from_nvs(serial));
+    err = get_slave_serial_number_from_nvs(serial);
     if (err == ESP_OK){
-        ESP_LOGI(TAG_BODY, "Serial number extracted from nvs...");
+        ESP_LOGI(TAG_DATA, "Serial number extracted from nvs...");
     }
 
     uint8_t mac[6];
     ESP_ERROR_CHECK(esp_efuse_mac_get_default(mac));
     if (err == ESP_OK){
-        ESP_LOGI(TAG_BODY, "MAC address extracted...");
+        ESP_LOGI(TAG_DATA, "MAC address extracted...");
     }
 
     set_slave_device(serial, mac);
