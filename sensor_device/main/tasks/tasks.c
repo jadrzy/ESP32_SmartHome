@@ -97,7 +97,7 @@ void task_fun_get_pressure_value(void *p)
 // Debug task to log sensor data
 void task_debug(void *p)
 {
-    struct sensor_data_t sensor_data = {0};
+    sensor_data_t sensor_data = {0};
 
     while (1)
     {
