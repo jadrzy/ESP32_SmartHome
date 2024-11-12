@@ -1,4 +1,7 @@
 #include "wifi.h"
+#include "esp_now.h"
+#include "tasks/data/data.h"
+#include <string.h>
 
 
 static const char *TAG_WIFI = "WIFI";
@@ -100,6 +103,7 @@ esp_err_t wifi_init()
 
 
 static EventGroupHandle_t esp_now_evt_group;
+static esp_now_peer_info_t peer;
 
 static void esp_now_recv_cb(const esp_now_recv_info_t *recv_info, const uint8_t *data, int len)
 {
@@ -115,18 +119,37 @@ static void esp_now_recv_cb(const esp_now_recv_info_t *recv_info, const uint8_t 
 
     memcpy(&recieve_data, data, len);
 
-    if (*recieve_data.mac_address != *recv_info->src_addr)
+    slave_device_t slave;
+    get_slave_device(slave.serial_number, slave.mac_address);
+    if (!strcmp(recieve_data.serial, slave.serial_number))
     {
-        ESP_LOGI(TAG_WIFI, "ESP-NOW recieve data error. MAC does not match");
+        ESP_LOGI(TAG_WIFI, "ESP-NOW recieve data error. Serial does not match");
         return;
     }
 
-    if (xQueueSend(get_rcv_data_handle(), &recieve_data, 0) != pdTRUE) {
-        ESP_LOGW(TAG_WIFI, "Queue full, discarded");
+    esp_now_peer_num_t peer_num;
+    esp_now_get_peer_num(&peer_num);
+    if (peer_num.total_num == 0)
+    {
+        peer.channel = 0;
+        memcpy(peer.peer_addr, recieve_data.mac_address, sizeof(recieve_data.mac_address)); 
+        esp_now_add_peer(&peer);
+    }
+    else if (peer_num.total_num != 0 || memcmp(recieve_data.mac_address, peer.peer_addr, sizeof(peer.peer_addr)))
+    {
+        ESP_LOGW(TAG_WIFI, "Peer's MAC address is not valid");
         return;
     }
-
+    else
+    {
+        // activate response 
+        if (xQueueSend(get_rcv_data_handle(), &recieve_data, 0) != pdTRUE) {
+            ESP_LOGW(TAG_WIFI, "Queue full, discarded");
+        }
+    }
+    return;
 }
+
 
 static void esp_now_sent_cb(const uint8_t *mac_addr, esp_now_send_status_t status)
 {
