@@ -37,7 +37,6 @@ void set_humidity(double);
 void set_pressure(double);
 void set_light_mode(bool);
 void set_light_value(int);
-
 void set_slave_device(const char serial[SERIAL_NUMBER_SIZE], const uint8_t mac[6]);
 
 #endif
