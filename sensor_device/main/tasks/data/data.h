@@ -5,9 +5,9 @@
 
 struct data {
     double lux;
-    double temperature,
-           humidity,
-           pressure;
+    double humidity;
+    double pressure;
+    double temperature;
 };
 
 extern double get_lux(void);
