@@ -23,14 +23,21 @@ typedef struct {
     int light_value;
 } light_control_t;
 
-extern double get_lux(void);
-extern double get_temperature(void);
-extern double get_humidity(void);
-extern double get_pressure(void);
+double get_lux(void);
+double get_temperature(void);
+double get_humidity(void);
+double get_pressure(void);
+bool get_light_mode(void);
+int get_light_value(void);
+void get_slave_device(char serial[SERIAL_NUMBER_SIZE], uint8_t mac[6]);
 
-extern void set_lux(double);
-extern void set_temperature(double);
-extern void set_humidity(double);
-extern void set_pressure(double);
+void set_lux(double);
+void set_temperature(double);
+void set_humidity(double);
+void set_pressure(double);
+void set_light_mode(bool);
+void set_light_value(int);
+
+void set_slave_device(const char serial[SERIAL_NUMBER_SIZE], const uint8_t mac[6]);
 
 #endif
