@@ -2,6 +2,9 @@
 #define HEADER_DATA_H
 
 #include <stdint.h>
+#include <stdbool.h>
+
+#define SERIAL_NUMBER_SIZE      13
 
 typedef struct {
     char serial_number[SERIAL_NUMBER_SIZE];
