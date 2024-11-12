@@ -39,5 +39,8 @@ void set_light_value(int);
 
 esp_err_t memory_setup(void);
 
+////
+void debug(void);
+///
 
 #endif
