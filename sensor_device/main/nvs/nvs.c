@@ -22,7 +22,7 @@ void init_nvs_partitions(void)
     ESP_ERROR_CHECK(ret);
 }
 
-void get_slave_serial_number_from_nvs(char *number)
+esp_err_t get_slave_serial_number_from_nvs(char *number)
 {
     esp_err_t err;
     nvs_handle_t my_handle;
@@ -31,7 +31,7 @@ void get_slave_serial_number_from_nvs(char *number)
     err = nvs_open_from_partition("serial", "slave_device", NVS_READONLY, &my_handle);
     if (err != ESP_OK) {
         printf("Error (%s) opening NVS handle!\n", esp_err_to_name(err));
-        return;
+        return err;
     }
 
     // Get required size for the serial number
@@ -52,4 +52,6 @@ void get_slave_serial_number_from_nvs(char *number)
     }
 
     nvs_close(my_handle);
+
+    return err;
 }
