@@ -1,6 +1,9 @@
 #ifndef WIFI_HEADER
 #define WIFI_HEADER
 
+#include "nvs/nvs.h"
+#include "tasks/data/data.h"
+
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
