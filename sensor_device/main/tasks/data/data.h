@@ -3,8 +3,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-
-#define SERIAL_NUMBER_SIZE      13
+#include "nvs/nvs.h"
 
 typedef struct {
     char serial_number[SERIAL_NUMBER_SIZE];
