@@ -2,6 +2,7 @@
 #include "esp_err.h"
 #include "esp_log.h"
 #include "freertos/idf_additions.h"
+#include "tasks/wifi/wifi.h"
 #include "tasks/data/data.h"
 
 static const char TAG_TASK[] = "TASK";
@@ -153,6 +154,13 @@ static esp_err_t prepare_send_data(send_data_t *data)
     return err;
 }
 
+static QueueHandle_t recieve_data_queue;
+
+QueueHandle_t get_queue_handle(void)
+{
+    return recieve_data_queue;
+}
+
 void recv_queue_task(void *p)
 {
     esp_err_t err = ESP_OK;
@@ -161,9 +169,10 @@ void recv_queue_task(void *p)
 
     ESP_LOGI(TAG_TASK, "Starting recieve queue task...");
 
+
     while(1)
     {
-        if(xQueueReceive(get_queue_handle(), &recv_data, portMAX_DELAY) == pdTRUE)
+        if(xQueueReceive(recieve_data_queue, &recv_data, portMAX_DELAY) == pdTRUE)
         {
             ESP_LOGI(TAG_TASK, "Data added to the queue");
             handle_recv_queue_data(&recv_data);
@@ -239,6 +248,8 @@ void initialize_tasks(void)
     xMutex_Temperature = xSemaphoreCreateMutex();
     xMutex_Pressure = xSemaphoreCreateMutex();
     xMutex_Light_settings = xSemaphoreCreateMutex();
+
+    recieve_data_queue = xQueueCreate(2, sizeof(recv_data_t));
 
     // Create tasks for reading sensors and logging data
     xTaskCreate(task_fun_get_lux_value, "Get_Lux_Task", 6144, NULL, 5, &task_handles.lux_task);

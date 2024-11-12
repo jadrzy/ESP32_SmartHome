@@ -3,6 +3,7 @@ idf_component_register(
     "device.c" 
     "nvs/nvs.c"
     "tasks/tasks.c"
+    "tasks/wifi/wifi.c"
     "tasks/data/data.c"
     "tasks/drivers/i2c/i2c.c" 
     "tasks/drivers/light_sensor/light_sensor.c"

@@ -99,15 +99,6 @@ esp_err_t wifi_init()
 
 
 
-static QueueHandle_t recieve_data_queue;
-
-QueueHandle_t get_queue_handle(void)
-{
-    return recieve_data_queue;
-}
-
-
-
 static EventGroupHandle_t esp_now_evt_group;
 static esp_now_peer_info_t peer;
 
@@ -149,7 +140,7 @@ static void esp_now_recv_cb(const esp_now_recv_info_t *recv_info, const uint8_t 
     else
     {
         // activate response 
-        if (xQueueSend(recieve_data_queue, &recieve_data, 0) != pdTRUE) {
+        if (xQueueSend(get_queue_handle(), &recieve_data, 0) != pdTRUE) {
             ESP_LOGW(TAG_WIFI, "Queue full, discarded");
         }
     }

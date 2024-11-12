@@ -113,6 +113,6 @@ void debug(void)
     get_slave_device(serial, mac);
 
     ESP_LOGI(TAG_DATA, "Serial = %s", serial);
-    ESP_LOGI(TAG_DATA, "Mac = %x:%x:%x:%x:%x:%x", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);    
+    ESP_LOGI(TAG_DATA, "Mac = %2x:%2x:%2x:%2x:%2x:%2x", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);    
 }
 

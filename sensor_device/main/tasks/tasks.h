@@ -39,5 +39,6 @@ void task_debug(void *pvParameters);                      // Debug task function
 
 // Function to initialize and create FreeRTOS tasks
 void initialize_tasks(void);
+QueueHandle_t get_queue_handle(void);
 
 #endif // HEADER_TASKS_H
