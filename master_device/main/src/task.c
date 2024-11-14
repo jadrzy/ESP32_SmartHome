@@ -63,7 +63,7 @@ esp_err_t recv_queue_task_init(void)
     
     recieve_data_queue = xQueueCreate(NUMBER_OF_DEVICES, sizeof(recv_data_t));
 
-    xTaskCreate(recv_queue_task, "Recieve queue task", 8192, NULL, 5, &task_handles.recv_queue);
+    xTaskCreatePinnedToCore(recv_queue_task, "Recieve queue task", 8192, NULL, 5, &task_handles.recv_queue, 1);
 
     return err;
 }

@@ -1,21 +1,19 @@
 #include "wifi.h"
 #include "esp_now.h"
 #include "tasks/data/data.h"
+#include "tasks/tasks.h"
 #include <string.h>
 
 
 static const char *TAG_WIFI = "WIFI";
-
 static wifi_flags_t flags = {0};
-
 static esp_netif_t *esp_netif_sta;
-
 
 static wifi_config_t wifi_sta_config = {
     .sta = {
         .scan_method = WIFI_ALL_CHANNEL_SCAN,
         .failure_retry_cnt = 10,
-        .channel = 1,
+        .channel = 0,
         .threshold.authmode = WIFI_AUTH_WPA2_PSK,
         .sae_pwe_h2e = WPA3_SAE_PWE_BOTH,
     },
@@ -45,7 +43,6 @@ static void wifi_event_handler(void *arg, esp_event_base_t event_base,
     // STA STARTED 
     if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_START) 
     {
-        //esp_wifi_connect();
         ESP_LOGI(TAG_WIFI, "Station started");
     } 
 }
@@ -54,7 +51,7 @@ static esp_netif_t *wifi_init_sta(void)
 {
     esp_netif_t *esp_netif_sta = esp_netif_create_default_wifi_sta();
     ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &wifi_sta_config));
-    ESP_LOGI(TAG_WIFI, "WIFI SM STARTED...");
+    ESP_LOGI(TAG_WIFI, "Starting station...");
 
     return esp_netif_sta;
 }
@@ -87,7 +84,6 @@ esp_err_t wifi_init()
         ESP_ERROR_CHECK( esp_wifi_set_mode(WIFI_MODE_STA));
 
         esp_netif_sta = wifi_init_sta();
-        ESP_LOGI(TAG_WIFI, "WIFI SM INITIALIZATION...");
 
         ESP_ERROR_CHECK(esp_wifi_start());
 
@@ -128,21 +124,36 @@ static void esp_now_recv_cb(const esp_now_recv_info_t *recv_info, const uint8_t 
     esp_now_get_peer_num(&peer_num);
     if (peer_num.total_num == 0)
     {
+        peer.ifidx = WIFI_IF_STA;
         peer.channel = 0;
         memcpy(peer.peer_addr, recieve_data.mac_address, sizeof(recieve_data.mac_address)); 
         esp_now_add_peer(&peer);
     }
-    else if (peer_num.total_num != 0 || memcmp(recieve_data.mac_address, peer.peer_addr, sizeof(peer.peer_addr)))
+    else if (peer_num.total_num != 0 && memcmp(recieve_data.mac_address, peer.peer_addr, sizeof(peer.peer_addr)))
     {
+        ESP_LOGI(TAG_WIFI, "Recieve MAC = %2x:%2x:%2x:%2x:%2x:%2x", 
+                 recieve_data.mac_address[0],
+                 recieve_data.mac_address[1],
+                 recieve_data.mac_address[2],
+                 recieve_data.mac_address[3],
+                 recieve_data.mac_address[4],
+                 recieve_data.mac_address[5]);
+
+        ESP_LOGI(TAG_WIFI, "Recieve MAC = %2x:%2x:%2x:%2x:%2x:%2x", 
+                 peer.peer_addr[0],
+                 peer.peer_addr[1],
+                 peer.peer_addr[2],
+                 peer.peer_addr[3],
+                 peer.peer_addr[4],
+                 peer.peer_addr[5]);
+
         ESP_LOGW(TAG_WIFI, "Peer's MAC address is not valid");
         return;
     }
-    else
-    {
-        // activate response 
-        if (xQueueSend(get_queue_handle(), &recieve_data, 0) != pdTRUE) {
-            ESP_LOGW(TAG_WIFI, "Queue full, discarded");
-        }
+
+    // activate response 
+    if (xQueueSend(get_queue_handle(), &recieve_data, 0) != pdTRUE) {
+        ESP_LOGW(TAG_WIFI, "Queue full, discarded");
     }
     return;
 }
@@ -193,9 +204,10 @@ esp_err_t send_espnow_data(send_data_t data)
     // Send it
     ESP_LOGI(TAG_WIFI, "Sending data to " MACSTR, MAC2STR(data.mac_address));
     err = esp_now_send(data.mac_address, (uint8_t*)&data, sizeof(data));
+
     if(err != ESP_OK)
     {
-        ESP_LOGE(TAG_WIFI, "Send error (%d)", err);
+        ESP_LOGE(TAG_WIFI, "Send error1 (%d)", err);
         return err;
     }
 

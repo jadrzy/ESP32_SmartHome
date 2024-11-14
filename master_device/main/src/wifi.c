@@ -27,7 +27,7 @@ static wifi_config_t wifi_sta_config = {
     .sta = {
         .scan_method = WIFI_ALL_CHANNEL_SCAN,
         .failure_retry_cnt = 10,
-        .channel = 1,
+        .channel = 0,
         .threshold.authmode = WIFI_AUTH_WPA2_PSK,
         .sae_pwe_h2e = WPA3_SAE_PWE_BOTH,
     },
@@ -35,7 +35,7 @@ static wifi_config_t wifi_sta_config = {
 
 wifi_config_t wifi_ap_config = {
     .ap = {
-        .channel = 0,
+        .channel = 1,
         .max_connection = 1,
         .ssid_hidden = true,
         .authmode = WIFI_AUTH_WPA3_EXT_PSK,
@@ -311,13 +311,14 @@ esp_err_t my_esp_now_init(void)
 
     if (!flags.esp_now_initiated)
     {
-        ESP_ERROR_CHECK(esp_wifi_set_protocol(ESP_IF_WIFI_AP, WIFI_PROTOCOL_11B|WIFI_PROTOCOL_11G|WIFI_PROTOCOL_11N|WIFI_PROTOCOL_LR));
+ //        ESP_ERROR_CHECK(esp_wifi_set_protocol(ESP_IF_WIFI_AP, WIFI_PROTOCOL_11B|WIFI_PROTOCOL_11G|WIFI_PROTOCOL_11N|WIFI_PROTOCOL_LR));
 
         ESP_ERROR_CHECK(esp_now_init());
         ESP_LOGI(TAG_WIFI, "ESP_NOW INITIALIZATION...");
 
         peer_list_setup();
            
+        esp_now_evt_group = xEventGroupCreate();
 
         ESP_ERROR_CHECK(esp_now_register_recv_cb(esp_now_recv_cb));
         ESP_ERROR_CHECK(esp_now_register_send_cb(esp_now_sent_cb));
@@ -328,6 +329,7 @@ esp_err_t my_esp_now_init(void)
     return err;
 }
 
+static int number_of_retries;
 
  esp_err_t send_espnow_data(send_data_t data)
 {
@@ -343,35 +345,49 @@ esp_err_t my_esp_now_init(void)
 
     // Send it
     ESP_LOGI(TAG_WIFI, "Sending data request to " MACSTR, MAC2STR(data.mac_address));
-    err = esp_now_send(data.mac_address, (uint8_t*)&data, sizeof(data));
-    if(err != ESP_OK)
-    {
-        ESP_LOGE(TAG_WIFI, "Send error (%d)", err);
-        return err;
-    }
 
-    // Wait for callback function to set status bit
-    EventBits_t bits = xEventGroupWaitBits(
-        esp_now_evt_group, 
-        BIT(ESP_NOW_SEND_SUCCESS) | BIT(ESP_NOW_SEND_FAIL), 
-        pdTRUE, 
-        pdFALSE, 
-        2000 / portTICK_PERIOD_MS);
+    number_of_retries = 0;
 
-    if ( !(bits & BIT(ESP_NOW_SEND_SUCCESS)) )
+    while ( number_of_retries < 50)
     {
-        if (bits & BIT(ESP_NOW_SEND_FAIL))
+        err = esp_now_send(data.mac_address, (uint8_t*)&data, sizeof(data));
+        if(err != ESP_OK)
         {
-            err = ESP_FAIL;
-            ESP_LOGE(TAG_WIFI, "ESP-NOW send error (%d)", err);
+            ESP_LOGE(TAG_WIFI, "Send error (%s)", esp_err_to_name(err));
             return err;
         }
-        err = ESP_ERR_TIMEOUT;
-        ESP_LOGE(TAG_WIFI, "ESP-NOW send error (%d)", err);
-        return err;
+
+        // Wait for callback function to set status bit
+        EventBits_t bits = xEventGroupWaitBits(
+            esp_now_evt_group, 
+            BIT(ESP_NOW_SEND_SUCCESS) | BIT(ESP_NOW_SEND_FAIL), 
+            pdTRUE, 
+            pdFALSE, 
+            2000 / portTICK_PERIOD_MS);
+
+        if ( !(bits & BIT(ESP_NOW_SEND_SUCCESS)) )
+        {
+            if (bits & BIT(ESP_NOW_SEND_FAIL))
+            {
+                err = ESP_FAIL;
+            }
+            else
+            {
+                err = ESP_ERR_TIMEOUT;
+            }
+        }
+        else
+        {
+            ESP_LOGI(TAG_WIFI, "Sent!");
+            break;
+        }
+        ++number_of_retries; 
     }
 
-    ESP_LOGI(TAG_WIFI, "Sent!");
+    if (err != ESP_OK)    
+        ESP_LOGE(TAG_WIFI, "ESP-NOW send error (%s)", esp_err_to_name(err));
+
+    ESP_LOGI(TAG_WIFI, "Number of retries = %d", number_of_retries);
     return ESP_OK;
 }
 

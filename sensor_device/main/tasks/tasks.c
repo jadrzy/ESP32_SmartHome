@@ -167,8 +167,7 @@ void recv_queue_task(void *p)
     static recv_data_t recv_data;
     static send_data_t send_data;  
 
-    ESP_LOGI(TAG_TASK, "Starting recieve queue task...");
-
+    ESP_LOGI(TAG_TASK, "Recieve queue task started");
 
     while(1)
     {
@@ -252,10 +251,10 @@ void initialize_tasks(void)
     recieve_data_queue = xQueueCreate(2, sizeof(recv_data_t));
 
     // Create tasks for reading sensors and logging data
-    xTaskCreate(task_fun_get_lux_value, "Get_Lux_Task", 6144, NULL, 5, &task_handles.lux_task);
-    xTaskCreate(task_fun_get_temp_hum_values, "Get_Temp_Hum_Task", 6144, NULL, 5, &task_handles.temp_hum_task);
-    xTaskCreate(task_fun_get_pressure_value, "Get_Pressure_Task", 6144, NULL, 5, &task_handles.press_task);
-    xTaskCreate(recv_queue_task, "Handle_rec_data", 6144, NULL, 6, &task_handles.recieve_data_task);
-    xTaskCreate(task_debug, "Debug_Task", 4096, NULL, 5, NULL);
+    xTaskCreatePinnedToCore(task_fun_get_lux_value, "Get_Lux_Task", 6144, NULL, 5, &task_handles.lux_task, 1);
+    xTaskCreatePinnedToCore(task_fun_get_temp_hum_values, "Get_Temp_Hum_Task", 6144, NULL, 5, &task_handles.temp_hum_task, 1);
+    xTaskCreatePinnedToCore(task_fun_get_pressure_value, "Get_Pressure_Task", 6144, NULL, 5, &task_handles.press_task, 1);
+    xTaskCreatePinnedToCore(recv_queue_task, "Handle_rec_data", 6144, NULL, 6, &task_handles.recieve_data_task, 1);
+    //xTaskCreatePinnedToCore(task_debug, "Debug_Task", 4096, NULL, 5, NULL, 1);
 
 }

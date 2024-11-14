@@ -25,16 +25,25 @@ void app_main(void)
     data.auto_light = devices[0].light_control.auto_light;
     data.light_value = devices[0].light_control.light_value;
 
+    ESP_LOGI(TAG_MAIN, "Serial = %s,\tMac = %2x:%2x:%2x:%2x:%2x:%2x", 
+             data.serial, 
+             data.mac_address[0], 
+             data.mac_address[1],
+             data.mac_address[2],
+             data.mac_address[3],
+             data.mac_address[4],
+             data.mac_address[5]);
+
     ESP_ERROR_CHECK(wifi_init());
     ESP_ERROR_CHECK(my_esp_now_init());
 
-    send_espnow_data(data);
 
-    // while(1)
-    // {
-    //     vTaskDelay(10000 / portTICK_PERIOD_MS);
+     while(1)
+     {
+         vTaskDelay(1000 / portTICK_PERIOD_MS);
+         send_espnow_data(data);
     //     wifi_reboot();
-    // }
+     }
 
     vTaskSuspend(NULL);
 }
