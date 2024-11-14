@@ -8,6 +8,8 @@
 static const char *TAG_WIFI = "WIFI";
 static wifi_flags_t flags = {0};
 static esp_netif_t *esp_netif_sta;
+static esp_netif_t *esp_netif_ap;
+
 
 static wifi_config_t wifi_sta_config = {
     .sta = {
@@ -16,6 +18,18 @@ static wifi_config_t wifi_sta_config = {
         .channel = 0,
         .threshold.authmode = WIFI_AUTH_WPA2_PSK,
         .sae_pwe_h2e = WPA3_SAE_PWE_BOTH,
+    },
+};
+
+wifi_config_t wifi_ap_config = {
+    .ap = {
+        .channel = 1,
+        .max_connection = 0,
+        .ssid_hidden = true,
+        .authmode = WIFI_AUTH_WPA3_EXT_PSK,
+        .pmf_cfg = {
+            .required = true,
+        },
     },
 };
 
@@ -45,6 +59,15 @@ static void wifi_event_handler(void *arg, esp_event_base_t event_base,
     {
         ESP_LOGI(TAG_WIFI, "Station started");
     } 
+}
+
+static esp_netif_t *wifi_init_ap(void)
+{
+    esp_netif_t *esp_netif_ap = esp_netif_create_default_wifi_ap();
+    ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_AP, &wifi_ap_config));
+    ESP_LOGI(TAG_WIFI, "WIFI SOFT_AP STARTED");
+
+    return esp_netif_ap;
 }
 
 static esp_netif_t *wifi_init_sta(void)
@@ -81,14 +104,16 @@ esp_err_t wifi_init()
         wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
         ESP_ERROR_CHECK( esp_wifi_init(&cfg) );
         ESP_ERROR_CHECK( esp_wifi_set_storage(WIFI_STORAGE_RAM) );
-        ESP_ERROR_CHECK( esp_wifi_set_mode(WIFI_MODE_STA));
+        ESP_ERROR_CHECK( esp_wifi_set_mode(WIFI_MODE_AP));
 
-        esp_netif_sta = wifi_init_sta();
+        //esp_netif_sta = wifi_init_sta();
+        esp_netif_ap = wifi_init_ap();
+
 
         ESP_ERROR_CHECK(esp_wifi_start());
 
         flags.wifi_initialized = 1;
-        esp_netif_set_default_netif(esp_netif_sta);
+        esp_netif_set_default_netif(esp_netif_ap);
     }
     return err;
 }
@@ -124,8 +149,8 @@ static void esp_now_recv_cb(const esp_now_recv_info_t *recv_info, const uint8_t 
     esp_now_get_peer_num(&peer_num);
     if (peer_num.total_num == 0)
     {
-        peer.ifidx = WIFI_IF_STA;
-        peer.channel = 0;
+        peer.ifidx = WIFI_IF_AP;
+        peer.channel = 1;
         memcpy(peer.peer_addr, recieve_data.mac_address, sizeof(recieve_data.mac_address)); 
         esp_now_add_peer(&peer);
     }
