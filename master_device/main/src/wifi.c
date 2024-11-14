@@ -12,6 +12,7 @@
 #include <stdint.h>
 #include <string.h>
 
+#define MAX_RETRIES_ESP_NOW 100
 
 static const char *TAG_WIFI = "WIFI";
 
@@ -328,7 +329,6 @@ esp_err_t my_esp_now_init(void)
     return err;
 }
 
-static int number_of_retries;
 
  esp_err_t send_espnow_data(send_data_t data)
 {
@@ -345,9 +345,9 @@ static int number_of_retries;
     // Send it
     ESP_LOGI(TAG_WIFI, "Sending data request to " MACSTR, MAC2STR(data.mac_address));
 
-    number_of_retries = 0;
+    int number_of_retries = 0;
 
-    while ( number_of_retries < 100)
+    while ( number_of_retries < MAX_RETRIES_ESP_NOW)
     {
         uint8_t primary = 0;
         wifi_second_chan_t secondary = 0;
