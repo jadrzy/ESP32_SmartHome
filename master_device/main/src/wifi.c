@@ -257,8 +257,8 @@ static esp_err_t peer_list_setup(void)
     {
         if (device_list[i].active)
         {
-            peer_list[peers_count].ifidx = WIFI_IF_STA;
-            peer_list[peers_count].channel = 0;
+            peer_list[peers_count].ifidx = WIFI_IF_AP;
+            peer_list[peers_count].channel = 1;
             memcpy(peer_list[peers_count].peer_addr, device_list[i].mac_address, sizeof(device_list[i].mac_address));
             esp_now_add_peer(&peer_list[peers_count]);
             peers_count++;
@@ -311,7 +311,7 @@ esp_err_t my_esp_now_init(void)
 
     if (!flags.esp_now_initiated)
     {
- //        ESP_ERROR_CHECK(esp_wifi_set_protocol(ESP_IF_WIFI_AP, WIFI_PROTOCOL_11B|WIFI_PROTOCOL_11G|WIFI_PROTOCOL_11N|WIFI_PROTOCOL_LR));
+        ESP_ERROR_CHECK(esp_wifi_set_protocol(ESP_IF_WIFI_AP, WIFI_PROTOCOL_11B|WIFI_PROTOCOL_11G|WIFI_PROTOCOL_11N|WIFI_PROTOCOL_LR));
 
         ESP_ERROR_CHECK(esp_now_init());
         ESP_LOGI(TAG_WIFI, "ESP_NOW INITIALIZATION...");
@@ -348,7 +348,7 @@ static int number_of_retries;
 
     number_of_retries = 0;
 
-    while ( number_of_retries < 50)
+    while ( number_of_retries < 10)
     {
         err = esp_now_send(data.mac_address, (uint8_t*)&data, sizeof(data));
         if(err != ESP_OK)
@@ -378,8 +378,9 @@ static int number_of_retries;
         }
         else
         {
+            err = ESP_OK
             ESP_LOGI(TAG_WIFI, "Sent!");
-            break;
+            return err;
         }
         ++number_of_retries; 
     }
