@@ -1,5 +1,7 @@
 #include "wifi.h"
 #include "esp_now.h"
+#include "esp_wifi.h"
+#include "esp_wifi_types_generic.h"
 #include "tasks/data/data.h"
 #include "tasks/tasks.h"
 #include <string.h>
@@ -7,31 +9,24 @@
 
 static const char *TAG_WIFI = "WIFI";
 static wifi_flags_t flags = {0};
-static esp_netif_t *esp_netif_sta;
 static esp_netif_t *esp_netif_ap;
 
 
-static wifi_config_t wifi_sta_config = {
-    .sta = {
-        .scan_method = WIFI_ALL_CHANNEL_SCAN,
-        .failure_retry_cnt = 10,
-        .channel = 0,
-        .threshold.authmode = WIFI_AUTH_WPA2_PSK,
-        .sae_pwe_h2e = WPA3_SAE_PWE_BOTH,
+static wifi_config_t wifi_ap_config = {
+    .ap = {
+        .ssid = "network test",
+        .password = "0123456789",
+        .channel = 6,
+        .max_connection = 0,
+        .ssid_hidden = true,
+        .authmode = WIFI_AUTH_WPA3_PSK,
+        .pmf_cfg = {
+            .required = true,
+        }
+
     },
 };
 
-wifi_config_t wifi_ap_config = {
-    .ap = {
-        .channel = 1,
-        .max_connection = 0,
-        .ssid_hidden = true,
-        .authmode = WIFI_AUTH_WPA3_EXT_PSK,
-        .pmf_cfg = {
-            .required = true,
-        },
-    },
-};
 
 // SUPPORT FUNCTIONS
 void mac_64_str(const uint64_t u64, char *str)
@@ -58,26 +53,28 @@ static void wifi_event_handler(void *arg, esp_event_base_t event_base,
     if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_START) 
     {
         ESP_LOGI(TAG_WIFI, "Station started");
+        esp_wifi_connect();
     } 
 }
+
 
 static esp_netif_t *wifi_init_ap(void)
 {
     esp_netif_t *esp_netif_ap = esp_netif_create_default_wifi_ap();
     ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_AP, &wifi_ap_config));
-    ESP_LOGI(TAG_WIFI, "WIFI SOFT_AP STARTED");
+    ESP_LOGI(TAG_WIFI, "Starting AP...");
 
     return esp_netif_ap;
 }
 
-static esp_netif_t *wifi_init_sta(void)
-{
-    esp_netif_t *esp_netif_sta = esp_netif_create_default_wifi_sta();
-    ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &wifi_sta_config));
-    ESP_LOGI(TAG_WIFI, "Starting station...");
-
-    return esp_netif_sta;
-}
+// static esp_netif_t *wifi_init_sta(void)
+// {
+//     esp_netif_t *esp_netif_sta = esp_netif_create_default_wifi_sta();
+//     ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &wifi_sta_config));
+//     ESP_LOGI(TAG_WIFI, "Starting station...");
+//
+//     return esp_netif_sta;
+// }
 
 
 esp_err_t wifi_init()
@@ -106,7 +103,6 @@ esp_err_t wifi_init()
         ESP_ERROR_CHECK( esp_wifi_set_storage(WIFI_STORAGE_RAM) );
         ESP_ERROR_CHECK( esp_wifi_set_mode(WIFI_MODE_AP));
 
-        //esp_netif_sta = wifi_init_sta();
         esp_netif_ap = wifi_init_ap();
 
 
@@ -150,7 +146,7 @@ static void esp_now_recv_cb(const esp_now_recv_info_t *recv_info, const uint8_t 
     if (peer_num.total_num == 0)
     {
         peer.ifidx = WIFI_IF_AP;
-        peer.channel = 1;
+        peer.channel = 6;
         memcpy(peer.peer_addr, recieve_data.mac_address, sizeof(recieve_data.mac_address)); 
         esp_now_add_peer(&peer);
     }
@@ -199,7 +195,7 @@ esp_err_t my_esp_now_init(void)
 
     if (!flags.esp_now_initiated)
     {
-        ESP_ERROR_CHECK(esp_wifi_set_protocol(ESP_IF_WIFI_STA, WIFI_PROTOCOL_11B|WIFI_PROTOCOL_11G|WIFI_PROTOCOL_11N|WIFI_PROTOCOL_LR));
+        ESP_ERROR_CHECK(esp_wifi_set_protocol(ESP_IF_WIFI_AP, WIFI_PROTOCOL_11B|WIFI_PROTOCOL_11G|WIFI_PROTOCOL_11N|WIFI_PROTOCOL_LR));
 
         ESP_ERROR_CHECK(esp_now_init());
         ESP_LOGI(TAG_WIFI, "ESP_NOW INITIALIZATION...");

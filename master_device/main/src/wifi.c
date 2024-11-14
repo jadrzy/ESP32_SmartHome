@@ -27,7 +27,6 @@ static wifi_config_t wifi_sta_config = {
     .sta = {
         .scan_method = WIFI_ALL_CHANNEL_SCAN,
         .failure_retry_cnt = 10,
-        .channel = 0,
         .threshold.authmode = WIFI_AUTH_WPA2_PSK,
         .sae_pwe_h2e = WPA3_SAE_PWE_BOTH,
     },
@@ -258,7 +257,7 @@ static esp_err_t peer_list_setup(void)
         if (device_list[i].active)
         {
             peer_list[peers_count].ifidx = WIFI_IF_AP;
-            peer_list[peers_count].channel = 1;
+            peer_list[peers_count].channel = 6;
             memcpy(peer_list[peers_count].peer_addr, device_list[i].mac_address, sizeof(device_list[i].mac_address));
             esp_now_add_peer(&peer_list[peers_count]);
             peers_count++;
@@ -311,7 +310,7 @@ esp_err_t my_esp_now_init(void)
 
     if (!flags.esp_now_initiated)
     {
-        ESP_ERROR_CHECK(esp_wifi_set_protocol(ESP_IF_WIFI_AP, WIFI_PROTOCOL_11B|WIFI_PROTOCOL_11G|WIFI_PROTOCOL_11N|WIFI_PROTOCOL_LR));
+        ESP_ERROR_CHECK(esp_wifi_set_protocol(ESP_IF_WIFI_STA, WIFI_PROTOCOL_11B|WIFI_PROTOCOL_11G|WIFI_PROTOCOL_11N|WIFI_PROTOCOL_LR));
 
         ESP_ERROR_CHECK(esp_now_init());
         ESP_LOGI(TAG_WIFI, "ESP_NOW INITIALIZATION...");
@@ -348,8 +347,12 @@ static int number_of_retries;
 
     number_of_retries = 0;
 
-    while ( number_of_retries < 10)
+    while ( number_of_retries < 100)
     {
+        uint8_t primary = 0;
+        wifi_second_chan_t secondary = 0;
+        esp_wifi_get_channel(&primary, &secondary);
+        ESP_LOGI(TAG_WIFI, "ESP-NOW channel = %d", primary);
         err = esp_now_send(data.mac_address, (uint8_t*)&data, sizeof(data));
         if(err != ESP_OK)
         {
@@ -378,7 +381,7 @@ static int number_of_retries;
         }
         else
         {
-            err = ESP_OK
+            err = ESP_OK;
             ESP_LOGI(TAG_WIFI, "Sent!");
             return err;
         }

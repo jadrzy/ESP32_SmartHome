@@ -1,7 +1,10 @@
 #include "device.h"
+#include "esp_wifi.h"
+#include "esp_wifi_types_generic.h"
 #include "freertos/idf_additions.h"
 #include "tasks/data/data.h"
 #include "tasks/wifi/wifi.h"
+#include <stdint.h>
 
 
 void app_main(void)
@@ -19,5 +22,13 @@ void app_main(void)
     
     initialize_tasks();
     
+    while(1){
+        uint8_t primary = 0;
+        wifi_second_chan_t secondary;
+        esp_wifi_get_channel(&primary, &secondary);
+        ESP_LOGI("TAG", "ESP-NOW channel = %d", primary);
+        vTaskDelay(10 / portTICK_PERIOD_MS);
+    }
+
     vTaskSuspend(NULL);
 }
