@@ -40,7 +40,6 @@
 typedef struct {
     unsigned int wifi_initialized : 1;
     unsigned int esp_now_initiated : 1;
-    unsigned int sta_connected : 1;
 } wifi_flags_t;
 
 typedef struct {

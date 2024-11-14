@@ -21,14 +21,6 @@ void app_main(void)
     vTaskDelay(500 / portTICK_PERIOD_MS);
     
     initialize_tasks();
-    
-    while(1){
-        uint8_t primary = 0;
-        wifi_second_chan_t secondary;
-        esp_wifi_get_channel(&primary, &secondary);
-        ESP_LOGI("TAG", "ESP-NOW channel = %d", primary);
-        vTaskDelay(10 / portTICK_PERIOD_MS);
-    }
 
     vTaskSuspend(NULL);
 }
