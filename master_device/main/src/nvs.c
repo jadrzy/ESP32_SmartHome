@@ -181,12 +181,13 @@ esp_err_t get_paired_devices_from_nvs(uint64_t mac_device_list[NUMBER_OF_DEVICES
         ESP_ERROR_CHECK(err);
 
         // Read the serial number
-        err = nvs_get_str(my_handle_serial, key_serial, serial_string, &required_size);
+        ESP_LOGI(TAG_NVS, "%s", serial_string);
         ESP_ERROR_CHECK(err);
 
         // Remove the newline character if present
         serial_string[strcspn(serial_string, "\n")] = '\0';
         strcpy(serial_device_list[i - 1], serial_string);
+        ESP_LOGI(TAG_NVS, "i = %d, serial = %s", i, serial_device_list[i-1]);
 
         // Get mac address
         char key_mac[9] = "mac_00";  // Adjust key size for proper usage

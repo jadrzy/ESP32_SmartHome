@@ -25,7 +25,7 @@ typedef struct {
 
 typedef struct {
     TaskHandle_t recv_queue;
-
+    TaskHandle_t send_data;
 } task_handles_t;
 
 QueueHandle_t get_rcv_data_handle(void);

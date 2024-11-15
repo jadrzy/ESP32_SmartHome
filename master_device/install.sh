@@ -14,8 +14,11 @@ source ~/Documents/esp/esp-idf/export.sh
 printf '\nCreating build...\n'
 idf.py build
 
+idf.py erase-flash
+
 printf '\nFlashing build...\n'
 idf.py flash 
+
 
 # Check if the CSV file exists before making binary partitions
 CSV_FILE="partitions/data.csv"

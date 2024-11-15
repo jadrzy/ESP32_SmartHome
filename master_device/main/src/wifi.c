@@ -3,6 +3,7 @@
 #include "esp_log.h"
 #include "esp_mac.h"
 #include "esp_now.h"
+#include "esp_wifi.h"
 #include "esp_wifi_types_generic.h"
 #include "freertos/idf_additions.h"
 #include "include/components.h"
@@ -12,7 +13,7 @@
 #include <stdint.h>
 #include <string.h>
 
-#define MAX_RETRIES_ESP_NOW 100
+#define MAX_RETRIES_ESP_NOW 10
 
 static const char *TAG_WIFI = "WIFI";
 
@@ -35,7 +36,7 @@ static wifi_config_t wifi_sta_config = {
 
 wifi_config_t wifi_ap_config = {
     .ap = {
-        .channel = 1,
+        .channel = 0,
         .max_connection = 1,
         .ssid_hidden = true,
         .authmode = WIFI_AUTH_WPA3_EXT_PSK,
@@ -45,6 +46,10 @@ wifi_config_t wifi_ap_config = {
     },
 };
 
+wifi_flags_t* get_wifi_flags(void)
+{
+    return &flags; 
+}
 
 // SUPPORT FUNCTIONS
 void mac_64_str(const uint64_t u64, char *str)
@@ -164,7 +169,6 @@ static esp_netif_t *wifi_init_sta(void)
 
     esp_netif_t *esp_netif_sta = esp_netif_create_default_wifi_sta();
     ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &wifi_sta_config));
-    ESP_LOGI(TAG_WIFI, "WIFI SM STARTED...");
 
     return esp_netif_sta;
 }
@@ -257,8 +261,7 @@ static esp_err_t peer_list_setup(void)
     {
         if (device_list[i].active)
         {
-            peer_list[peers_count].ifidx = WIFI_IF_AP;
-            peer_list[peers_count].channel = 6;
+            peer_list[peers_count].ifidx = WIFI_IF_STA;
             memcpy(peer_list[peers_count].peer_addr, device_list[i].mac_address, sizeof(device_list[i].mac_address));
             esp_now_add_peer(&peer_list[peers_count]);
             peers_count++;
@@ -343,16 +346,17 @@ esp_err_t my_esp_now_init(void)
     }
 
     // Send it
-    ESP_LOGI(TAG_WIFI, "Sending data request to " MACSTR, MAC2STR(data.mac_address));
+    ESP_LOGI(TAG_WIFI, "Sending data to " MACSTR, MAC2STR(data.mac_address));
+
+    uint8_t primary = 0;
+    wifi_second_chan_t secondary;
+    esp_wifi_get_channel(&primary, &secondary);
+    data.channel = primary;
 
     int number_of_retries = 0;
 
     while ( number_of_retries < MAX_RETRIES_ESP_NOW)
     {
-        uint8_t primary = 0;
-        wifi_second_chan_t secondary = 0;
-        esp_wifi_get_channel(&primary, &secondary);
-        ESP_LOGI(TAG_WIFI, "ESP-NOW channel = %d", primary);
         err = esp_now_send(data.mac_address, (uint8_t*)&data, sizeof(data));
         if(err != ESP_OK)
         {
@@ -382,7 +386,7 @@ esp_err_t my_esp_now_init(void)
         else
         {
             err = ESP_OK;
-            ESP_LOGI(TAG_WIFI, "Sent!");
+            ESP_LOGI(TAG_WIFI, "Data sent!\n");
             return err;
         }
         ++number_of_retries; 
@@ -391,7 +395,7 @@ esp_err_t my_esp_now_init(void)
     if (err != ESP_OK)    
         ESP_LOGE(TAG_WIFI, "ESP-NOW send error (%s)", esp_err_to_name(err));
 
-    ESP_LOGI(TAG_WIFI, "Number of retries = %d", number_of_retries);
+    ESP_LOGI(TAG_WIFI, "Number of retries = %d\n", number_of_retries);
     return ESP_OK;
 }
 

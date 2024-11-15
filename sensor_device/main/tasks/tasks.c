@@ -114,6 +114,30 @@ void task_fun_get_pressure_value(void *p)
     }
 }
 
+void task_light_control(void *p)
+{
+    uint8_t mode;
+    int value;
+    // Protect and update pressure value with mutex
+    while(1)
+    {
+        if (xSemaphoreTake(xMutex_Light_settings, 10) == pdTRUE)
+        {
+            mode = get_light_mode();
+            value = get_light_value();
+            xSemaphoreGive(xMutex_Light_settings);
+        }
+
+
+
+    // FUTURE CODE //
+
+
+
+        vTaskDelay(LIGHT_SENSOR_MEASUREMENT_TIME);
+    }
+}
+
 void task_channel_sniffer(void *p)
 {
     wifi_flags_t *flags;
@@ -319,6 +343,7 @@ void initialize_tasks(void)
     xTaskCreatePinnedToCore(task_fun_get_pressure_value, "Get_Pressure_Task", 6144, NULL, 5, &task_handles.press_task, 1);
     xTaskCreatePinnedToCore(recv_queue_task, "Handle_rec_data", 6144, NULL, 6, &task_handles.recieve_data_task, 1);
     xTaskCreatePinnedToCore(task_channel_sniffer, "Toggle wifi channel", 4096, NULL, 4, &task_handles.channel_sniffer_task, 1);
+    xTaskCreatePinnedToCore(task_light_control, "Light control task", 4096, NULL, 3, &task_handles.light_control_task, 1);
 
     channel_sniffer_timer = xTimerCreate(
         "Disconnect timer",

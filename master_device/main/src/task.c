@@ -4,6 +4,7 @@
 #include "freertos/idf_additions.h"
 #include "include/data.h"
 #include "include/wifi.h"
+#include <string.h>
 
 #define QUEUE_TASK_WAIT_TIME (10 / portTICK_PERIOD_MS)
 
@@ -30,6 +31,8 @@ static esp_err_t handle_recv_queue_data(recv_data_t * data)
     };
 
     err = set_slave_device_sensor(data->mac_address, data->serial, s_data);
+    ESP_LOGI(TAG_TASK, "Recieved data: lux = %g | pressure = %g | humidity = %g | temperature = %g", 
+             data->lux, data->pressure, data->humidity, data->temperature);
     return err;
 }
 
@@ -44,7 +47,6 @@ void recv_queue_task(void *p)
     {
         if(xQueueReceive(recieve_data_queue, &recv_data, portMAX_DELAY) == pdTRUE)
         {
-            ESP_LOGI(TAG_TASK, "Data added to the queue");
             handle_recv_queue_data(&recv_data);
         }
 
@@ -52,6 +54,35 @@ void recv_queue_task(void *p)
 
 }
 
+void send_data_task(void *p)
+{
+    static slave_device_t devices[NUMBER_OF_DEVICES];
+    static send_data_t data;
+    static wifi_flags_t *flags;
+    flags = get_wifi_flags();
+
+    while(1)
+    {
+        if (flags->sta_connected)
+        {
+            get_slave_devices(devices);
+
+            for (int i = 0; i < NUMBER_OF_DEVICES; i++)
+            {
+                if (devices[i].active)
+                {
+                    strcpy(data.serial, devices[i].serial_number);
+                    memcpy(data.mac_address, devices[i].mac_address, sizeof(data.mac_address));
+                    data.auto_light = devices[i].light_control.auto_light;
+                    data.light_value = devices[i].light_control.light_value;
+                    ESP_LOGI(TAG_TASK, "Sending data: lm = %d | light_value = %d", data.auto_light, data.light_value);
+                    send_espnow_data(data);
+                }
+            }
+        }
+        vTaskDelay(DATA_REQUEST_PERIOD);
+    }
+}
 
 
 esp_err_t recv_queue_task_init(void)
@@ -64,7 +95,7 @@ esp_err_t recv_queue_task_init(void)
     recieve_data_queue = xQueueCreate(NUMBER_OF_DEVICES, sizeof(recv_data_t));
 
     xTaskCreatePinnedToCore(recv_queue_task, "Recieve queue task", 8192, NULL, 5, &task_handles.recv_queue, 1);
-
+    xTaskCreatePinnedToCore(send_data_task, "Send data task", 8192, NULL, 4, &task_handles.send_data, 1);
     return err;
 }
 
