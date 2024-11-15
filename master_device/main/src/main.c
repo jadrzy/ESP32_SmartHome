@@ -1,9 +1,13 @@
 #include "include/main.h"
 #include "esp_err.h"
 #include "esp_log.h"
+#include "esp_wifi.h"
+#include "esp_wifi_types_generic.h"
+#include "freertos/idf_additions.h"
 #include "include/data.h"
 #include "include/task.h"
 #include "include/wifi.h"
+#include <stdint.h>
 #include <string.h>
 
 static const char TAG_MAIN[] = "MAIN";
@@ -20,10 +24,6 @@ void app_main(void)
     ESP_ERROR_CHECK(recv_queue_task_init());
 
     get_slave_devices(devices);
-    strcpy(data.serial, devices[0].serial_number);
-    memcpy(data.mac_address, devices[0].mac_address, sizeof(data.mac_address));
-    data.auto_light = devices[0].light_control.auto_light;
-    data.light_value = devices[0].light_control.light_value;
 
     ESP_LOGI(TAG_MAIN, "Serial = %s,\tMac = %2x:%2x:%2x:%2x:%2x:%2x", 
              data.serial, 
@@ -37,6 +37,17 @@ void app_main(void)
     ESP_ERROR_CHECK(wifi_init());
     ESP_ERROR_CHECK(my_esp_now_init());
 
+    vTaskDelay(10*1000 / portTICK_PERIOD_MS);
+
+    strcpy(data.serial, devices[0].serial_number);
+    memcpy(data.mac_address, devices[0].mac_address, sizeof(data.mac_address));
+    data.auto_light = devices[0].light_control.auto_light;
+    data.light_value = devices[0].light_control.light_value;
+
+    uint8_t primary = 0;
+    wifi_second_chan_t secondary;
+    esp_wifi_get_channel(&primary, &secondary);
+    data.channel = primary;
 
      while(1)
      {

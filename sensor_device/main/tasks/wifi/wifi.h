@@ -36,6 +36,7 @@
 #include "lwip/sys.h"
 #include "nvs_flash.h"
 
+#define MAX_SEND_RETRIES 10
 
 typedef struct {
     unsigned int wifi_initialized : 1;
@@ -43,6 +44,7 @@ typedef struct {
 } wifi_flags_t;
 
 typedef struct {
+    uint8_t channel;
     uint8_t mac_address[6];
     char serial[SERIAL_NUMBER_SIZE];
     bool auto_light;
@@ -59,8 +61,10 @@ typedef struct {
 } send_data_t;
 
 
+wifi_flags_t* get_wifi_flags(void);
 esp_err_t wifi_init();
 esp_err_t my_esp_now_init(void);
 esp_err_t send_espnow_data(send_data_t data);
+void delete_my_peer(void);
 
 #endif

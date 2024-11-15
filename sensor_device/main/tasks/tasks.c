@@ -1,15 +1,21 @@
 #include "tasks.h"
 #include "esp_err.h"
 #include "esp_log.h"
+#include "esp_wifi.h"
+#include "esp_wifi_types_generic.h"
 #include "freertos/idf_additions.h"
+#include "freertos/projdefs.h"
 #include "tasks/wifi/wifi.h"
 #include "tasks/data/data.h"
+#include <stdint.h>
 
 static const char TAG_TASK[] = "TASK";
 
 // Static handles for I2C and task management
 static struct i2c i2c_handles;
 static struct task_handles task_handles;
+static TimerHandle_t channel_sniffer_timer = NULL;
+
 
 // Mutex handles for sensor data protection
 static SemaphoreHandle_t 
@@ -26,8 +32,13 @@ void initialize_sensors(void)
     // Initialize I2C and configure sensors
     i2c_init(&i2c_handles);
     light_sensor_config(&i2c_handles.light_sensor_handle);
+    ESP_LOGI(TAG_TASK, "Light sensor acquisition period = %d ms", (int) LIGHT_SENSOR_MEASUREMENT_TIME);
+
     temp_hum_sensor_config(&i2c_handles.temp_hum_sensor_handle);
+    ESP_LOGI(TAG_TASK, "Temperature and humidity sensor acquisition period = %d ms", (int) TEMP_HUM_SENSOR_MEASUREMENT_TIME + 85);
+
     pressure_sensor_config(&i2c_handles.pressure_sensor_handle);
+    ESP_LOGI(TAG_TASK, "Pressure sensor acquisition period = %d ms", (int) PRESSURE_SENSOR_MEASUREMENT_TIME + 45);
 }
 
 // Task function to read temperature and humidity values
@@ -103,11 +114,64 @@ void task_fun_get_pressure_value(void *p)
     }
 }
 
+void task_channel_sniffer(void *p)
+{
+    wifi_flags_t *flags;
+    flags = get_wifi_flags();
+    while(1)
+    {
+        uint8_t new_channel = 0;
+        uint8_t primary;
+        wifi_second_chan_t secondary;
+
+        if (flags->wifi_initialized == true || flags->esp_now_initiated == true)
+        {
+            ESP_ERROR_CHECK(esp_wifi_get_channel(&primary, &secondary));
+            new_channel = (primary < WIFI_MAX_CHANNEL) ? (primary + 1) : 1; 
+            ESP_LOGI(TAG_TASK, "NEW_CHANNEL = %d", new_channel);
+            ESP_ERROR_CHECK(esp_wifi_set_channel(new_channel, WIFI_SECOND_CHAN_NONE));
+        }
+
+        vTaskDelay(SNIFFER_TASK_PERIOD);
+    }
+}
+
+
+void sniffer_suspend(void)
+{
+    vTaskSuspend(task_handles.channel_sniffer_task);
+    ESP_LOGI(TAG_TASK, "Channel sniffer suspended");
+    xTimerStart(channel_sniffer_timer, 5);
+}
+
+void sniffer_activate(void)
+{
+    vTaskResume(task_handles.channel_sniffer_task);
+    ESP_LOGI(TAG_TASK, "Channel sniffer activated");
+    xTimerStop(channel_sniffer_timer, 5);
+}
+
+void reset_sniffer_timer(void)
+{
+    xTimerReset(channel_sniffer_timer, 5);
+    ESP_LOGI(TAG_TASK, "Timer reset"); 
+}
+
+void callback_sniffer_timer(TimerHandle_t xTimer)
+{
+    ESP_LOGI(TAG_TASK, "Max connection idle time reached...");
+    delete_my_peer();
+    ESP_LOGI(TAG_TASK, "Peer deleted");
+    sniffer_activate();
+}
+
+
 static esp_err_t handle_recv_queue_data(recv_data_t * data)
 {
     esp_err_t err = ESP_OK;
     //mutex
 
+    ESP_LOGI(TAG_TASK, "Recieved data: lm = %d | light_value = %d", data->auto_light, data->light_value);
     if (xSemaphoreTake(xMutex_Light_settings, 10) == pdTRUE)
     {
         set_light_mode(data->auto_light);
@@ -151,8 +215,13 @@ static esp_err_t prepare_send_data(send_data_t *data)
         xSemaphoreGive(xMutex_Pressure);
     }
 
+    ESP_LOGI(TAG_TASK, "Sending data: lux = %g | pressure = %g | humidity = %g | temperature = %g", 
+             data->lux, data->pressure, data->humidity, data->temperature);
+
     return err;
 }
+
+
 
 static QueueHandle_t recieve_data_queue;
 
@@ -173,10 +242,8 @@ void recv_queue_task(void *p)
     {
         if(xQueueReceive(recieve_data_queue, &recv_data, portMAX_DELAY) == pdTRUE)
         {
-            ESP_LOGI(TAG_TASK, "Data added to the queue");
             handle_recv_queue_data(&recv_data);
 
-            ESP_LOGI(TAG_TASK, "Preparing data to be sent");
             err = prepare_send_data(&send_data);
             if (err != ESP_OK)
             {
@@ -184,14 +251,10 @@ void recv_queue_task(void *p)
                 continue;
             }
 
-            ESP_LOGI(TAG_TASK, "Sending data");
             send_espnow_data(send_data);
         }
-
-
     }
 }
-
 
 
 // Debug task to log sensor data
@@ -255,6 +318,15 @@ void initialize_tasks(void)
     xTaskCreatePinnedToCore(task_fun_get_temp_hum_values, "Get_Temp_Hum_Task", 6144, NULL, 5, &task_handles.temp_hum_task, 1);
     xTaskCreatePinnedToCore(task_fun_get_pressure_value, "Get_Pressure_Task", 6144, NULL, 5, &task_handles.press_task, 1);
     xTaskCreatePinnedToCore(recv_queue_task, "Handle_rec_data", 6144, NULL, 6, &task_handles.recieve_data_task, 1);
+    xTaskCreatePinnedToCore(task_channel_sniffer, "Toggle wifi channel", 4096, NULL, 4, &task_handles.channel_sniffer_task, 1);
+
+    channel_sniffer_timer = xTimerCreate(
+        "Disconnect timer",
+        pdMS_TO_TICKS(RESET_PEER_TIME),
+        pdFALSE,
+        (void*)0,
+        callback_sniffer_timer
+    );
     //xTaskCreatePinnedToCore(task_debug, "Debug_Task", 4096, NULL, 5, NULL, 1);
 
 }

@@ -49,6 +49,7 @@ typedef struct {
 } wifi_flags_t;
 
 typedef struct {
+    uint8_t channel;
     uint8_t mac_address[6];
     char serial[SERIAL_NUMBER_SIZE];
     bool auto_light;

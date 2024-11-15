@@ -17,13 +17,16 @@
 #define LIGHT_SENSOR_MEASUREMENT_TIME     (15 / portTICK_PERIOD_MS)   // 15ms for light sensor measurement
 #define TEMP_HUM_SENSOR_MEASUREMENT_TIME  (5 / portTICK_PERIOD_MS)    // 5ms for temperature & humidity sensor (+85ms in measurement)
 #define PRESSURE_SENSOR_MEASUREMENT_TIME  (5 / portTICK_PERIOD_MS)    // 5ms for pressure sensor (+45ms in measurement)
+#define SNIFFER_TASK_PERIOD               (50 / portTICK_PERIOD_MS)
+#define RESET_PEER_TIME                   (60 * 1000)                 // 1min 
+#define WIFI_MAX_CHANNEL 13
 
 // Structure to hold task handles for FreeRTOS tasks
 struct task_handles {
     TaskHandle_t lux_task;        // Task handle for light sensor
     TaskHandle_t temp_hum_task;   // Task handle for temperature & humidity sensor
     TaskHandle_t press_task;      // Task handle for pressure sensor
-    TaskHandle_t wifi_task;       // Task handle for Wi-Fi task
+    TaskHandle_t channel_sniffer_task;       // Task handle for Wi-Fi task
     TaskHandle_t recieve_data_task;
 };
 
@@ -40,5 +43,10 @@ void task_debug(void *pvParameters);                      // Debug task function
 // Function to initialize and create FreeRTOS tasks
 void initialize_tasks(void);
 QueueHandle_t get_queue_handle(void);
+
+void sniffer_suspend(void);
+void sniffer_activate(void);
+void reset_sniffer_timer(void);
+void callback_sniffer_timer(TimerHandle_t xTimer);
 
 #endif // HEADER_TASKS_H
