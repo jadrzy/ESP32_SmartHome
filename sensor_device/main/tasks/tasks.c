@@ -5,6 +5,7 @@
 #include "esp_wifi_types_generic.h"
 #include "freertos/idf_additions.h"
 #include "freertos/projdefs.h"
+#include "tasks/drivers/led/led.h"
 #include "tasks/wifi/wifi.h"
 #include "tasks/data/data.h"
 #include <stdint.h>

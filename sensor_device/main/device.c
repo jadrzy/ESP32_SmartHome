@@ -1,4 +1,5 @@
 #include "device.h"
+#include "esp_err.h"
 #include "esp_wifi.h"
 #include "esp_wifi_types_generic.h"
 #include "freertos/idf_additions.h"

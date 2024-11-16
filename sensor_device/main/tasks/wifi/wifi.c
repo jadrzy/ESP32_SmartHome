@@ -5,6 +5,7 @@
 #include "esp_wifi_types_generic.h"
 #include "freertos/idf_additions.h"
 #include "tasks/data/data.h"
+#include "tasks/drivers/led/led.h"
 #include "tasks/tasks.h"
 #include <stdint.h>
 #include <string.h>
@@ -126,6 +127,7 @@ static void esp_now_sent_cb(const uint8_t *mac_addr, esp_now_send_status_t statu
         ESP_LOGE(TAG_WIFI, "ESP-NOW send data error...");
         return;
     }
+    blink_signal_led();
     xEventGroupSetBits(esp_now_evt_group, BIT(status));
 }
 
@@ -138,13 +140,14 @@ esp_err_t my_esp_now_init(void)
         ESP_ERROR_CHECK(esp_wifi_set_protocol(ESP_IF_WIFI_STA, WIFI_PROTOCOL_11B|WIFI_PROTOCOL_11G|WIFI_PROTOCOL_11N|WIFI_PROTOCOL_LR));
 
         ESP_ERROR_CHECK(esp_now_init());
-        // ESP_ERROR_CHECK(esp_wifi_set_channel(6, WIFI_SECOND_CHAN_NONE));
         ESP_LOGI(TAG_WIFI, "ESP_NOW INITIALIZATION...");
            
         esp_now_evt_group = xEventGroupCreate();
 
         ESP_ERROR_CHECK(esp_now_register_recv_cb(esp_now_recv_cb));
         ESP_ERROR_CHECK(esp_now_register_send_cb(esp_now_sent_cb));
+
+        ESP_ERROR_CHECK(signal_led_init());
 
         flags.esp_now_initiated = 1;
     }

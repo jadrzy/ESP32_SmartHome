@@ -14,6 +14,8 @@ source ~/Documents/esp/esp-idf/export.sh
 printf '\nCreating build...\n'
 idf.py build
 
+idf.py flash-erase
+
 printf '\nFlashing build...\n'
 idf.py flash 
 

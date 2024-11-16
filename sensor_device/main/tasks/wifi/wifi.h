@@ -2,6 +2,7 @@
 #define WIFI_HEADER
 
 #include "nvs/nvs.h"
+#include "tasks/drivers/led/led.h"
 
 #include <stdint.h>
 #include <stdlib.h>
