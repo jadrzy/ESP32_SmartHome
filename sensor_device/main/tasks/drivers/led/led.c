@@ -4,7 +4,6 @@
 #include <stdio.h>
 #include "esp_log.h"
 #include "freertos/idf_additions.h"
-#include "portmacro.h"
 
 static const char* TAG_LED = "LED_DRIVER";
 
@@ -12,7 +11,6 @@ esp_err_t signal_led_init(void)
 {
     esp_err_t err = ESP_OK;
 
-    vTaskDelay(500 / portTICK_PERIOD_MS);
     gpio_config_t conf = {
         .mode = GPIO_MODE_OUTPUT,
         .intr_type = GPIO_INTR_DISABLE,

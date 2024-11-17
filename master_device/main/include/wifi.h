@@ -45,6 +45,7 @@ typedef struct {
     unsigned int setup_mode : 1;
     unsigned int wifi_initialized : 1;
     unsigned int esp_now_initiated : 1;
+    unsigned int rtc_synchronized : 1;
     unsigned int sta_connected : 1;
     unsigned int ap_connected : 1;
     unsigned int reboot : 1;
