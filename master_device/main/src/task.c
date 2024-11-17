@@ -3,6 +3,7 @@
 #include "esp_log.h"
 #include "freertos/idf_additions.h"
 #include "include/data.h"
+#include "include/led.h"
 #include "include/wifi.h"
 #include <string.h>
 
@@ -85,17 +86,28 @@ void send_data_task(void *p)
 }
 
 
-void wifi_reboot_task(void *p)
+void wifi_reboot_and_led_toggle_task(void *p)
 {
     wifi_flags_t *flags;
     flags = get_wifi_flags();
 
     while(1)
     {
+        // REBOOT CONTROL
         if (flags->reboot == 1)     
         {
             wifi_reboot();
             flags->reboot = 0;
+        }
+
+        // LED CONTROL
+        if (flags->setup_mode)
+        {
+            toggle_wifi_led();
+        }
+        else if (flags->sta_connected) 
+        {
+            set_on_wifi_led();
         }
 
         vTaskDelay(WIFI_REBOOT_CHECK_TIME);
@@ -113,7 +125,7 @@ esp_err_t recv_queue_task_init(void)
 
     xTaskCreatePinnedToCore(recv_queue_task, "Recieve queue task", 8192, NULL, 5, &task_handles.recv_queue, 1);
     xTaskCreatePinnedToCore(send_data_task, "Send data task", 8192, NULL, 4, &task_handles.send_data, 1);
-    xTaskCreatePinnedToCore(wifi_reboot_task, "Wifi reboot task", 8192, NULL, 2, &task_handles.reboot, 1);
+    xTaskCreatePinnedToCore(wifi_reboot_and_led_toggle_task, "Wifi reboot and led toggle task", 8192, NULL, 3, &task_handles.reboot_and_led, 1);
     return err;
 }
 

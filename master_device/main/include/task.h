@@ -28,7 +28,7 @@ typedef struct {
 typedef struct {
     TaskHandle_t recv_queue;
     TaskHandle_t send_data;
-    TaskHandle_t reboot;
+    TaskHandle_t reboot_and_led;
 } task_handles_t;
 
 QueueHandle_t get_rcv_data_handle(void);

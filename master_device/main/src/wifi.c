@@ -15,6 +15,8 @@
 #include <stdint.h>
 #include <string.h>
 
+#include "include/led.h"
+
 #define MAX_RETRIES_ESP_NOW 10
 
 static const char *TAG_WIFI = "WIFI";
@@ -43,7 +45,7 @@ wifi_config_t wifi_ap_config = {
         .channel = 0,
         .max_connection = 0,
         .ssid_hidden = true,
-        .authmode = WIFI_AUTH_WPA3_EXT_PSK,
+        .authmode = WIFI_AUTH_WPA3_PSK,
         .pmf_cfg = {
             .required = true,
         },
@@ -204,6 +206,7 @@ void wifi_reboot(void)
     }
 
     ESP_ERROR_CHECK(wifi_init());
+    vTaskDelay(10 / portTICK_PERIOD_MS); 
     ESP_ERROR_CHECK(my_esp_now_init());
 }
 
@@ -225,7 +228,12 @@ esp_err_t start_setup_mode(void)
 {
     esp_err_t err = ESP_OK;
     set_setup_mode(true);
-    xTimerStart(setup_timer, 5);
+    if (!xTimerIsTimerActive(setup_timer))
+    {
+        xTimerReset(setup_timer, 5);
+    }
+    else 
+        xTimerStart(setup_timer, 5);
     return err;
 }
 
@@ -360,6 +368,7 @@ static void esp_now_sent_cb(const uint8_t *mac_addr, esp_now_send_status_t statu
         ESP_LOGE(TAG_WIFI, "ESP-NOW send data error...");
         return;
     }
+    blink_signal_led();
     xEventGroupSetBits(esp_now_evt_group, BIT(status));
 }
 

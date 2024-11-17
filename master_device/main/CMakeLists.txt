@@ -7,6 +7,7 @@ idf_component_register(
         "src/wifi.c"
         "src/nvs.c"
         "src/button.c"
+        "src/led.c"
     INCLUDE_DIRS 
         "."
 )
