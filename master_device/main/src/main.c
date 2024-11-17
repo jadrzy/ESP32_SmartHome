@@ -20,6 +20,7 @@ void app_main(void)
     ESP_ERROR_CHECK(wifi_init());
     ESP_ERROR_CHECK(my_esp_now_init());
 
+
     vTaskSuspend(NULL);
 }
 

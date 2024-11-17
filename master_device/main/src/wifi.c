@@ -6,6 +6,8 @@
 #include "esp_wifi.h"
 #include "esp_wifi_types_generic.h"
 #include "freertos/idf_additions.h"
+#include "freertos/projdefs.h"
+#include "include/button.h"
 #include "include/components.h"
 #include "include/data.h"
 #include "include/nvs.h"
@@ -20,6 +22,8 @@ static const char *TAG_WIFI = "WIFI";
 static esp_now_peer_info_t peer_list[NUMBER_OF_DEVICES];
 
 static wifi_flags_t flags = {0};
+
+static TimerHandle_t setup_timer = NULL;
 
 static esp_netif_t *esp_netif_ap;
 static esp_netif_t *esp_netif_sta;
@@ -37,7 +41,7 @@ static wifi_config_t wifi_sta_config = {
 wifi_config_t wifi_ap_config = {
     .ap = {
         .channel = 0,
-        .max_connection = 1,
+        .max_connection = 0,
         .ssid_hidden = true,
         .authmode = WIFI_AUTH_WPA3_EXT_PSK,
         .pmf_cfg = {
@@ -141,13 +145,18 @@ static esp_netif_t *wifi_init_ap(void)
     wifi_ap_config.ap.password[63] = '\0';
 
     if (flags.setup_mode == 1)
+    {
         wifi_ap_config.ap.max_connection = 1;
+        ESP_LOGI(TAG_WIFI, "WIFI SETUP MODE = ON");
+    }
     else
+    {
         wifi_ap_config.ap.max_connection = 0;
+        ESP_LOGI(TAG_WIFI, "WIFI SETUP MODE = OFF");
+    }
 
     esp_netif_t *esp_netif_ap = esp_netif_create_default_wifi_ap();
     ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_AP, &wifi_ap_config));
-    ESP_LOGI(TAG_WIFI, "WIFI SOFT_AP STARTED, SSID:%s password:%s",ssid_ap, psswd_ap);
 
     return esp_netif_ap;
 }
@@ -176,6 +185,7 @@ static esp_netif_t *wifi_init_sta(void)
 
 void wifi_reboot(void)
 {
+    ESP_LOGI(TAG_WIFI, "WIFI REBOOT...");
     if(flags.esp_now_initiated)
     {
         esp_now_deinit();
@@ -192,10 +202,44 @@ void wifi_reboot(void)
         flags.wifi_initialized = 0;
 
     }
-    ESP_LOGI(TAG_WIFI, "WIFI uninitialized...");
 
     ESP_ERROR_CHECK(wifi_init());
     ESP_ERROR_CHECK(my_esp_now_init());
+}
+
+
+static esp_err_t set_setup_mode(bool state)
+{
+    esp_err_t err = ESP_OK;
+
+    if (flags.setup_mode != state)
+    {
+        flags.setup_mode = state;
+        flags.reboot = 1;
+    }
+
+    return err;
+}
+
+esp_err_t start_setup_mode(void)
+{
+    esp_err_t err = ESP_OK;
+    set_setup_mode(true);
+    xTimerStart(setup_timer, 5);
+    return err;
+}
+
+esp_err_t stop_setup_mode(void)
+{
+    esp_err_t err = ESP_OK;
+    set_setup_mode(false);
+    xTimerStop(setup_timer, 5);
+    return err;
+}
+
+void callback_setup_time_expired(TimerHandle_t xTimer)
+{
+    stop_setup_mode();
 }
 
 
@@ -235,6 +279,17 @@ esp_err_t wifi_init()
 
         flags.wifi_initialized = 1;
         esp_netif_set_default_netif(esp_netif_sta);
+
+        if (setup_timer == NULL)
+        {
+            button_init();
+            setup_timer = xTimerCreate(
+                "Setup timer", 
+                pdMS_TO_TICKS(MAX_SETUP_TIME), 
+                pdFALSE, 
+                (void*)0, 
+                callback_setup_time_expired);
+        }
     }
     return err;
 }

@@ -85,6 +85,23 @@ void send_data_task(void *p)
 }
 
 
+void wifi_reboot_task(void *p)
+{
+    wifi_flags_t *flags;
+    flags = get_wifi_flags();
+
+    while(1)
+    {
+        if (flags->reboot == 1)     
+        {
+            wifi_reboot();
+            flags->reboot = 0;
+        }
+
+        vTaskDelay(WIFI_REBOOT_CHECK_TIME);
+    }
+}
+
 esp_err_t recv_queue_task_init(void)
 {
     esp_err_t err = ESP_OK;
@@ -96,6 +113,7 @@ esp_err_t recv_queue_task_init(void)
 
     xTaskCreatePinnedToCore(recv_queue_task, "Recieve queue task", 8192, NULL, 5, &task_handles.recv_queue, 1);
     xTaskCreatePinnedToCore(send_data_task, "Send data task", 8192, NULL, 4, &task_handles.send_data, 1);
+    xTaskCreatePinnedToCore(wifi_reboot_task, "Wifi reboot task", 8192, NULL, 2, &task_handles.reboot, 1);
     return err;
 }
 

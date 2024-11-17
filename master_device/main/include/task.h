@@ -18,6 +18,8 @@
 #include <stdint.h>
 #include <esp_log.h>
 
+#define WIFI_REBOOT_CHECK_TIME (1000 / portTICK_PERIOD_MS)
+
 typedef struct {
     SemaphoreHandle_t xMutex_sensor_data;
     SemaphoreHandle_t xMutex_light_control;
@@ -26,6 +28,7 @@ typedef struct {
 typedef struct {
     TaskHandle_t recv_queue;
     TaskHandle_t send_data;
+    TaskHandle_t reboot;
 } task_handles_t;
 
 QueueHandle_t get_rcv_data_handle(void);
