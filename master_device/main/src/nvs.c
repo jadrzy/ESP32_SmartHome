@@ -148,7 +148,7 @@ esp_err_t write_wifi_sm_cred_to_nvs(char * SSID,char * PSSWD)
 }
 
 
-esp_err_t get_paired_devices_from_nvs(uint64_t mac_device_list[NUMBER_OF_DEVICES], char serial_device_list[SERIAL_NUMBER_SIZE][NUMBER_OF_DEVICES])
+esp_err_t get_paired_devices_from_nvs(uint64_t mac_device_list[NUMBER_OF_DEVICES], char serial_device_list[NUMBER_OF_DEVICES][SERIAL_NUMBER_SIZE])
 {
     esp_err_t err = ESP_OK;
     nvs_handle_t my_handle_serial;
@@ -181,13 +181,12 @@ esp_err_t get_paired_devices_from_nvs(uint64_t mac_device_list[NUMBER_OF_DEVICES
         ESP_ERROR_CHECK(err);
 
         // Read the serial number
-        ESP_LOGI(TAG_NVS, "%s", serial_string);
+        err = nvs_get_str(my_handle_serial, key_serial, serial_string, &required_size);
         ESP_ERROR_CHECK(err);
 
         // Remove the newline character if present
         serial_string[strcspn(serial_string, "\n")] = '\0';
         strcpy(serial_device_list[i - 1], serial_string);
-        ESP_LOGI(TAG_NVS, "i = %d, serial = %s", i, serial_device_list[i-1]);
 
         // Get mac address
         char key_mac[9] = "mac_00";  // Adjust key size for proper usage
@@ -205,7 +204,7 @@ esp_err_t get_paired_devices_from_nvs(uint64_t mac_device_list[NUMBER_OF_DEVICES
     return err;
 }
 
-esp_err_t write_paired_devices_to_nvs(uint64_t mac_device_list[NUMBER_OF_DEVICES], char serial_device_list[SERIAL_NUMBER_SIZE][NUMBER_OF_DEVICES])
+esp_err_t write_paired_devices_to_nvs(uint64_t mac_device_list[NUMBER_OF_DEVICES], char serial_device_list[NUMBER_OF_DEVICES][SERIAL_NUMBER_SIZE])
 {
     esp_err_t err = ESP_OK;
     nvs_handle_t my_handle_serial;

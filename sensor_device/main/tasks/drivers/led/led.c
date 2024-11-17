@@ -12,7 +12,6 @@ esp_err_t signal_led_init(void)
 {
     esp_err_t err = ESP_OK;
 
-    ESP_LOGI(TAG_LED, "FLAG");
     vTaskDelay(500 / portTICK_PERIOD_MS);
     gpio_config_t conf = {
         .mode = GPIO_MODE_OUTPUT,
@@ -29,7 +28,6 @@ esp_err_t signal_led_init(void)
 
 esp_err_t blink_signal_led(void)
 {
-    ESP_LOGI(TAG_LED, "BLINKING");
     esp_err_t err = ESP_OK;
 
     err = gpio_set_level(LED_SIGNAL_PIN, 1);

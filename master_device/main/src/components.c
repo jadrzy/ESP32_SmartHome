@@ -36,7 +36,7 @@ esp_err_t memory_update(void)
 
     slave_device_t devices[NUMBER_OF_DEVICES] = {0};
 
-    char serial_numbers[SERIAL_NUMBER_SIZE][NUMBER_OF_DEVICES];
+    char serial_numbers[NUMBER_OF_DEVICES][SERIAL_NUMBER_SIZE];
     uint64_t mac_addresses[NUMBER_OF_DEVICES];
 
 

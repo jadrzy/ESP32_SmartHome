@@ -40,10 +40,8 @@ esp_err_t set_slave_device_sensor(const uint8_t mac_address[6], const char seria
     {
         if(slave_devices[i].active)
         {
-            ESP_LOGI(TAG_DATA,"|%s|  |%s|", serial, slave_devices[i].serial_number);
             if (!strcmp(serial, slave_devices[i].serial_number)) 
             {
-                ESP_LOGI(TAG_DATA, "FLAG");
                 // check if MAC is correct
                 bool diff = false;
                 for (int j = 0; j < 6; j++)
@@ -64,7 +62,6 @@ esp_err_t set_slave_device_sensor(const uint8_t mac_address[6], const char seria
                     {
                         slave_devices[i].sensor_data = data;
                         slave_devices[i].new_data = true;
-                        ESP_LOGI(TAG_DATA, "Device %s sensor data saved", serial);
                         xSemaphoreGive(sem->xMutex_sensor_data);
                     }
 
@@ -83,7 +80,6 @@ void get_master_device(char serial[SERIAL_NUMBER_SIZE], uint8_t mac[6])
 {
     strcpy(serial, master_device.serial_number);
     memcpy(mac, master_device.mac_address, 6);
-    ESP_LOGI(TAG_DATA, "DEBUG");
 }
 
 void get_slave_devices(slave_device_t devices[NUMBER_OF_DEVICES])

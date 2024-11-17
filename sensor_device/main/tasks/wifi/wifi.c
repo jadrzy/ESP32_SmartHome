@@ -1,5 +1,6 @@
 #include "wifi.h"
 #include "esp_err.h"
+#include "esp_log.h"
 #include "esp_now.h"
 #include "esp_wifi.h"
 #include "esp_wifi_types_generic.h"
@@ -77,9 +78,9 @@ static void esp_now_recv_cb(const esp_now_recv_info_t *recv_info, const uint8_t 
     // CHECK IF DATA WAS WELL ADDRESSED
     slave_device_t slave;
     get_slave_device(slave.serial_number, slave.mac_address);
-    if (!strcmp(recieve_data.serial, slave.serial_number))
+    if (strcmp(recieve_data.serial, slave.serial_number))
     {
-        ESP_LOGI(TAG_WIFI, "ESP-NOW recieve data error. Serial does not match");
+        ESP_LOGE(TAG_WIFI, "ESP-NOW recieve data error. Serial does not match");
         return;
     }
 
