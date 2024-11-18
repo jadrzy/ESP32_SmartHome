@@ -13,6 +13,7 @@
 #include "esp_attr.h"
 #include "esp_sleep.h"
 #include "lwip/arch.h"
+#include "lwip/inet.h"
 #include "nvs_flash.h"
 #include "esp_sntp.h"
 #include "esp_netif_types.h"
@@ -43,25 +44,6 @@ void time_sync_cb(struct timeval *tv)
 
 #include "esp_http_client.h"
 
-static void http_test_task(void)
-{
-    esp_http_client_config_t config = {
-        .url = "http://example.com",
-    };
-    esp_http_client_handle_t client = esp_http_client_init(&config);
-
-    esp_err_t err = esp_http_client_perform(client);
-    if (err == ESP_OK) {
-        ESP_LOGI("HTTP", "HTTP GET Status = %d, content_length = %d",
-                 (int) esp_http_client_get_status_code(client),
-                 (int) esp_http_client_get_content_length(client));
-    } else {
-        ESP_LOGE("HTTP", "HTTP GET request failed: %s", esp_err_to_name(err));
-    }
-    esp_http_client_cleanup(client);
-    vTaskDelete(NULL);
-}
-
 
 void synch_time(void)
 {
@@ -72,20 +54,18 @@ void synch_time(void)
         ESP_LOGE(TAG_NTP, "DNS lookup failed: %d", err);
         return;
     }
-    struct sockaddr_in *addr = (struct sockaddr_in *)res->ai_addr;
-    ESP_LOGI(TAG_NTP, "Resolved example.com to IP: " IPSTR, IP2STR(&addr->sin_addr));
     freeaddrinfo(res);
 
     ESP_LOGI(TAG_NTP, "Testing HTTP connection...");
     esp_http_client_config_t config = {
-        .url = "http://example.com",
+        .url = "https://www.google.com",
     };
     esp_http_client_handle_t client = esp_http_client_init(&config);
     err = esp_http_client_perform(client);
     if (err == ESP_OK) {
         ESP_LOGI(TAG_NTP, "HTTP GET Status = %d, content_length = %d",
-                 esp_http_client_get_status_code(client),
-                 esp_http_client_get_content_length(client));
+                 (int) esp_http_client_get_status_code(client),
+                 (int) esp_http_client_get_content_length(client));
     } else {
         ESP_LOGE(TAG_NTP, "HTTP GET request failed: %s", esp_err_to_name(err));
     }
