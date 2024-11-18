@@ -1,4 +1,5 @@
 #include "include/ntp.h"
+#include "esp_err.h"
 #include "include/wifi.h"
 #include <string.h>
 #include <time.h>
@@ -29,7 +30,7 @@ void synch_time(void)
     ESP_LOGI(TAG_NTP, "Initializing SNTP");
 
     esp_sntp_setoperatingmode(SNTP_OPMODE_POLL);
-    esp_sntp_setservername(0, "pool.ntp.org");
+    esp_sntp_setservername(0, "time.google.com");
     sntp_set_time_sync_notification_cb(time_sync_cb);
     sntp_set_sync_mode(SNTP_SYNC_MODE_IMMED);
 
@@ -45,3 +46,4 @@ void synch_time(void)
     gettimeofday(&tv, NULL);
     ESP_LOGI(TAG_NTP, "Time synchronized: %ld sec | %ld usec", (long)tv.tv_sec, (long)tv.tv_usec);
 }
+
