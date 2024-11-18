@@ -15,7 +15,7 @@
 #include "nvs_flash.h"
 #include "esp_sntp.h"
 
-#include "ping/ping.h"
+#include "esp_netdb.h"
 
 
 static const char* TAG_NTP = "NTP";
@@ -51,31 +51,20 @@ void synch_time(void)
 }
 
 
-
-
-
-static void ping_results(ping_target_id_t msg_type, esp_ping_found *msg)
+static void check_internet_dns(void)
 {
-    if (msg_type == PING_TARGET_IP) {
-        ESP_LOGI("Ping", "Ping to: " IPSTR ", time: %d ms", IP2STR(&msg->target_ip), msg->resp_time);
-    }
-}
-
-static void check_internet_ping(void)
-{
-    ip_addr_t target_ip;
-    inet_pton(AF_INET, "8.8.8.8", &target_ip); // Google DNS
-
-    esp_ping_config_t ping_config = ESP_PING_DEFAULT_CONFIG();
-    ping_config.target_addr = target_ip;
-
-    esp_ping_callbacks_t cbs = {
-        .cb_args = NULL,
-        .on_ping_success = ping_results,
+    struct addrinfo hints = {
+        .ai_family = AF_INET,
     };
+    struct addrinfo *res;
 
-    esp_ping_handle_t ping_handle;
-    esp_ping_new_session(&ping_config, &cbs, &ping_handle);
-
-    esp_ping_start(ping_handle);
+    int err = getaddrinfo("example.com", NULL, &hints, &res);
+    if (err != 0) {
+        ESP_LOGE("DNS", "DNS lookup failed: %d", err);
+    } else {
+        char addr_str[INET_ADDRSTRLEN];
+        inet_ntop(AF_INET, &((struct sockaddr_in *)res->ai_addr)->sin_addr, addr_str, INET_ADDRSTRLEN);
+        ESP_LOGI("DNS", "Resolved example.com to %s", addr_str);
+        freeaddrinfo(res);
+    }
 }
