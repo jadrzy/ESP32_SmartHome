@@ -11,6 +11,8 @@
 #include <string.h>
 #include "include/led.h"
 
+#include "include/ntp.h"
+
 static const char TAG_MAIN[] = "MAIN";
 
 void app_main(void)

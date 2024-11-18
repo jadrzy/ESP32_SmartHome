@@ -16,6 +16,7 @@
 #include <string.h>
 
 #include "include/led.h"
+#include "include/ntp.h"
 
 #define MAX_RETRIES_ESP_NOW 10
 
@@ -122,6 +123,7 @@ static void wifi_event_handler(void *arg, esp_event_base_t event_base,
     else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP) {
         ip_event_got_ip_t *event = (ip_event_got_ip_t *) event_data;
         ESP_LOGI(TAG_WIFI, "Got IP:" IPSTR, IP2STR(&event->ip_info.ip));
+        synch_time();
     }
 }
 

@@ -3,7 +3,7 @@
 
 #include <time.h>
 
-time_t get_timestamp(void); 
+void synch_time(void);
 
 
 
