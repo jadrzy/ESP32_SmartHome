@@ -210,6 +210,8 @@ void wifi_reboot(void)
     ESP_ERROR_CHECK(wifi_init());
     vTaskDelay(10 / portTICK_PERIOD_MS); 
     ESP_ERROR_CHECK(my_esp_now_init());
+    vTaskDelay(10 / portTICK_PERIOD_MS); 
+    esp_wifi_start();
 }
 
 
@@ -284,8 +286,6 @@ esp_err_t wifi_init()
 
         esp_netif_sta = wifi_init_sta();
         ESP_LOGI(TAG_WIFI, "WIFI SM INITIALIZATION...");
-
-        ESP_ERROR_CHECK(esp_wifi_start());
 
         flags.wifi_initialized = 1;
         esp_netif_set_default_netif(esp_netif_sta);
@@ -370,7 +370,6 @@ static void esp_now_sent_cb(const uint8_t *mac_addr, esp_now_send_status_t statu
         ESP_LOGE(TAG_WIFI, "ESP-NOW send data error...");
         return;
     }
-    blink_signal_led();
     xEventGroupSetBits(esp_now_evt_group, BIT(status));
 }
 
@@ -453,6 +452,7 @@ esp_err_t my_esp_now_init(void)
         {
             err = ESP_OK;
             ESP_LOGI(TAG_WIFI, "Data sent!\n");
+            blink_signal_led();
             return err;
         }
         ++number_of_retries; 

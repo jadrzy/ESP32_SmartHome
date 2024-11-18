@@ -21,9 +21,12 @@ void app_main(void)
     ESP_ERROR_CHECK(memory_setup());
     ESP_ERROR_CHECK(init_led());
     ESP_ERROR_CHECK(recv_queue_task_init());
-    ESP_ERROR_CHECK(wifi_init());
-    ESP_ERROR_CHECK(my_esp_now_init());
 
+    ESP_ERROR_CHECK(wifi_init());
+    vTaskDelay(10 / portTICK_PERIOD_MS);
+    ESP_ERROR_CHECK(my_esp_now_init());
+    vTaskDelay(10 / portTICK_PERIOD_MS);
+    esp_wifi_start();
 
     vTaskSuspend(NULL);
 }
