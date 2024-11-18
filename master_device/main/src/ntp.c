@@ -30,8 +30,6 @@ void time_sync_cb(struct timeval *tv)
 void synch_time(void)
 {
     ESP_LOGI(TAG_NTP, "Initializing SNTP...");
-    esp_sntp_setoperatingmode(SNTP_OPMODE_POLL);
-    esp_sntp_setservername(0, "pool.ntp.org");
-    sntp_set_time_sync_notification_cb(time_sync_cb);
-    
+    esp_sntp_config_t config = ESP_NETIF_SNTP_DEFAULT_CONFIG("pool.ntp.org");
+    esp_netif_sntp_init(&config);
 }
