@@ -43,7 +43,7 @@ void time_sync_cb(struct timeval *tv)
 
 #include "esp_http_client.h"
 
-static void http_test_task(void *pvParameters)
+static void http_test_task(void)
 {
     esp_http_client_config_t config = {
         .url = "http://example.com",
@@ -53,8 +53,8 @@ static void http_test_task(void *pvParameters)
     esp_err_t err = esp_http_client_perform(client);
     if (err == ESP_OK) {
         ESP_LOGI("HTTP", "HTTP GET Status = %d, content_length = %d",
-                 esp_http_client_get_status_code(client),
-                 esp_http_client_get_content_length(client));
+                 (int) esp_http_client_get_status_code(client),
+                 (int) esp_http_client_get_content_length(client));
     } else {
         ESP_LOGE("HTTP", "HTTP GET request failed: %s", esp_err_to_name(err));
     }
