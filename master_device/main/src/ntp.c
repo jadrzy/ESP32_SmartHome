@@ -15,6 +15,8 @@
 #include "nvs_flash.h"
 #include "esp_sntp.h"
 
+#include "ping/ping.h"
+
 
 static const char* TAG_NTP = "NTP";
 
@@ -28,7 +30,8 @@ void time_sync_cb(struct timeval *tv)
 void synch_time(void)
 {
     ESP_LOGI(TAG_NTP, "Initializing SNTP");
-
+    check_internet_ping();
+    
     esp_sntp_setoperatingmode(SNTP_OPMODE_POLL);
     esp_sntp_setservername(0, "time.google.com");
     sntp_set_time_sync_notification_cb(time_sync_cb);
@@ -47,3 +50,32 @@ void synch_time(void)
     ESP_LOGI(TAG_NTP, "Time synchronized: %ld sec | %ld usec", (long)tv.tv_sec, (long)tv.tv_usec);
 }
 
+
+
+
+
+static void ping_results(ping_target_id_t msg_type, esp_ping_found *msg)
+{
+    if (msg_type == PING_TARGET_IP) {
+        ESP_LOGI("Ping", "Ping to: " IPSTR ", time: %d ms", IP2STR(&msg->target_ip), msg->resp_time);
+    }
+}
+
+static void check_internet_ping(void)
+{
+    ip_addr_t target_ip;
+    inet_pton(AF_INET, "8.8.8.8", &target_ip); // Google DNS
+
+    esp_ping_config_t ping_config = ESP_PING_DEFAULT_CONFIG();
+    ping_config.target_addr = target_ip;
+
+    esp_ping_callbacks_t cbs = {
+        .cb_args = NULL,
+        .on_ping_success = ping_results,
+    };
+
+    esp_ping_handle_t ping_handle;
+    esp_ping_new_session(&ping_config, &cbs, &ping_handle);
+
+    esp_ping_start(ping_handle);
+}
