@@ -3,7 +3,9 @@
 
 #include <time.h>
 
-void synch_time(void);
+void time_sync_cb(struct timeval *tv);
+void my_sntp_init(void);
+void my_sntp_deinit(void);
 
 
 

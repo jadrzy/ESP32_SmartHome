@@ -17,19 +17,39 @@
 #include "nvs_flash.h"
 #include "esp_sntp.h"
 #include "esp_netif_types.h"
+#include "esp_netif.h"
+#include "esp_netif_sntp.h"
 
 static const char* TAG_NTP = "NTP";
 
+wifi_flags_t *flags;
+
 void time_sync_cb(struct timeval *tv)
 {
-    wifi_flags_t *flags = get_wifi_flags();
     ESP_LOGI(TAG_NTP, "Time synchronized");
-    flags->rtc_synchronized = 1;
 }
 
-void synch_time(void)
+
+void my_sntp_init(void)
 {
-    ESP_LOGI(TAG_NTP, "Initializing SNTP...");
     esp_sntp_config_t config = ESP_NETIF_SNTP_DEFAULT_CONFIG("pool.ntp.org");
-    esp_netif_sntp_init(&config);
+    flags = get_wifi_flags();
+    if (flags->sntp_initialized == 0)
+    {
+        ESP_LOGI(TAG_NTP, "Initializing SNTP...");
+        config.sync_cb = time_sync_cb;
+        esp_netif_sntp_init(&config);
+        flags->sntp_initialized = 1;
+    }
+}
+
+void my_sntp_deinit(void)
+{
+    flags = get_wifi_flags();
+    if (flags->sntp_initialized == 1)
+    {
+        ESP_LOGI(TAG_NTP, "Deinitializing SNTP...");
+        esp_netif_sntp_deinit();
+        flags->sntp_initialized = 0;
+    }
 }

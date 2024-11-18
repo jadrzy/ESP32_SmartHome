@@ -17,6 +17,7 @@
 
 #include "include/led.h"
 #include "include/ntp.h"
+#include "portmacro.h"
 
 #define MAX_RETRIES_ESP_NOW 10
 
@@ -44,7 +45,7 @@ static wifi_config_t wifi_sta_config = {
 wifi_config_t wifi_ap_config = {
     .ap = {
         .channel = 0,
-        .max_connection = 0,
+        .max_connection = 1,
         .ssid_hidden = true,
         .authmode = WIFI_AUTH_WPA3_PSK,
         .pmf_cfg = {
@@ -116,14 +117,22 @@ static void wifi_event_handler(void *arg, esp_event_base_t event_base,
     {
         ESP_LOGI(TAG_WIFI, "Station disconnected...");
         flags.sta_connected = 0;
-        esp_wifi_connect();
+        my_sntp_deinit();
+        // esp_wifi_connect();
     } 
 
     // STA GOT IP
     else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP) {
         ip_event_got_ip_t *event = (ip_event_got_ip_t *) event_data;
         ESP_LOGI(TAG_WIFI, "Got IP:" IPSTR, IP2STR(&event->ip_info.ip));
-        synch_time();
+        flags.got_ip = 1;
+        my_sntp_init();
+    }
+
+    // STA LOST IP
+    else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_LOST_IP) {
+        ESP_LOGI(TAG_WIFI, "Lost IP:");
+        flags.got_ip = 0;
     }
 }
 
@@ -190,28 +199,20 @@ static esp_netif_t *wifi_init_sta(void)
 void wifi_reboot(void)
 {
     ESP_LOGI(TAG_WIFI, "WIFI REBOOT...");
-    if(flags.esp_now_initiated)
+    esp_wifi_disconnect();
+    if (flags.setup_mode == 1)
     {
-        esp_now_deinit();
-        flags.esp_now_initiated = 0;
+        wifi_ap_config.ap.max_connection = 1;
+        ESP_LOGI(TAG_WIFI, "WIFI SETUP MODE = ON");
     }
-
-    if (flags.wifi_initialized)
+    else
     {
-        ESP_ERROR_CHECK(esp_wifi_stop());
-        ESP_ERROR_CHECK(esp_wifi_deinit());
-        ESP_ERROR_CHECK(esp_event_loop_delete_default());
-        esp_netif_destroy(esp_netif_sta);
-        esp_netif_destroy(esp_netif_ap);
-        flags.wifi_initialized = 0;
-
+        wifi_ap_config.ap.max_connection = 0;
+        ESP_LOGI(TAG_WIFI, "WIFI SETUP MODE = OFF");
     }
+    ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_AP, &wifi_ap_config));
 
-    ESP_ERROR_CHECK(wifi_init());
-    vTaskDelay(10 / portTICK_PERIOD_MS); 
-    ESP_ERROR_CHECK(my_esp_now_init());
-    vTaskDelay(10 / portTICK_PERIOD_MS); 
-    esp_wifi_start();
+    esp_wifi_connect();
 }
 
 
