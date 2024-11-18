@@ -65,10 +65,47 @@ static void http_test_task(void)
 
 void synch_time(void)
 {
-    ESP_LOGI(TAG_NTP, "Initializing SNTP");
-    http_test_task();
+    ESP_LOGI(TAG_NTP, "Checking DNS resolution...");
+    struct addrinfo *res;
+    int err = getaddrinfo("example.com", NULL, NULL, &res);
+    if (err != 0) {
+        ESP_LOGE(TAG_NTP, "DNS lookup failed: %d", err);
+        return;
+    }
+    struct sockaddr_in *addr = (struct sockaddr_in *)res->ai_addr;
+    ESP_LOGI(TAG_NTP, "Resolved example.com to IP: " IPSTR, IP2STR(&addr->sin_addr));
+    freeaddrinfo(res);
+
+    ESP_LOGI(TAG_NTP, "Testing HTTP connection...");
+    esp_http_client_config_t config = {
+        .url = "http://example.com",
+    };
+    esp_http_client_handle_t client = esp_http_client_init(&config);
+    err = esp_http_client_perform(client);
+    if (err == ESP_OK) {
+        ESP_LOGI(TAG_NTP, "HTTP GET Status = %d, content_length = %d",
+                 esp_http_client_get_status_code(client),
+                 esp_http_client_get_content_length(client));
+    } else {
+        ESP_LOGE(TAG_NTP, "HTTP GET request failed: %s", esp_err_to_name(err));
+    }
+    esp_http_client_cleanup(client);
+
+    ESP_LOGI(TAG_NTP, "Initializing SNTP...");
     esp_sntp_setoperatingmode(SNTP_OPMODE_POLL);
     esp_sntp_setservername(0, "pool.ntp.org");
     sntp_set_time_sync_notification_cb(time_sync_cb);
     esp_sntp_init();
+
+    ESP_LOGI(TAG_NTP, "SNTP initialized, waiting for synchronization...");
+    vTaskDelay(2000 / portTICK_PERIOD_MS);
+
+    if (sntp_get_sync_status() == SNTP_SYNC_STATUS_RESET) {
+        ESP_LOGE(TAG_NTP, "SNTP synchronization failed.");
+        return;
+    }
+
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    ESP_LOGI(TAG_NTP, "Time synchronized: %ld sec | %ld usec", (long)tv.tv_sec, (long)tv.tv_usec);
 }
