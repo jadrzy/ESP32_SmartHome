@@ -1,8 +1,12 @@
 #include "include/wifi.h"
 #include "esp_err.h"
+#include "esp_event.h"
+#include "esp_interface.h"
 #include "esp_log.h"
 #include "esp_mac.h"
+#include "esp_netif.h"
 #include "esp_now.h"
+#include "esp_system.h"
 #include "esp_wifi.h"
 #include "esp_wifi_types_generic.h"
 #include "freertos/idf_additions.h"
@@ -86,7 +90,7 @@ static void wifi_event_handler(void *arg, esp_event_base_t event_base,
         wifi_event_ap_staconnected_t *event = (wifi_event_ap_staconnected_t *) event_data;
         ESP_LOGI(TAG_WIFI, "Station "MACSTR" joined, AID=%d",
                  MAC2STR(event->mac), event->aid);
-       flags.ap_connected = 1; 
+        flags.ap_connected = 1; 
     } 
 
     // AP DISCONNECTED
@@ -95,7 +99,7 @@ static void wifi_event_handler(void *arg, esp_event_base_t event_base,
         wifi_event_ap_stadisconnected_t *event = (wifi_event_ap_stadisconnected_t *) event_data;
         ESP_LOGI(TAG_WIFI, "Station "MACSTR" left, AID=%d, reason:%d",
                  MAC2STR(event->mac), event->aid, event->reason);
-       flags.ap_connected = 0; 
+        flags.ap_connected = 0; 
     }
 
     // STA STARTED 
@@ -118,7 +122,8 @@ static void wifi_event_handler(void *arg, esp_event_base_t event_base,
         ESP_LOGI(TAG_WIFI, "Station disconnected...");
         flags.sta_connected = 0;
         my_sntp_deinit();
-        // esp_wifi_connect();
+        if (flags.reboot == 0)
+            esp_wifi_connect();
     } 
 
     // STA GOT IP
@@ -161,6 +166,9 @@ static esp_netif_t *wifi_init_ap(void)
     {
         wifi_ap_config.ap.max_connection = 1;
         ESP_LOGI(TAG_WIFI, "WIFI SETUP MODE = ON");
+        ESP_LOGI(TAG_WIFI, "SSID = %s", wifi_ap_config.ap.ssid);
+        ESP_LOGI(TAG_WIFI, "PSSWD = %s", wifi_ap_config.ap.password);
+
     }
     else
     {
@@ -198,21 +206,28 @@ static esp_netif_t *wifi_init_sta(void)
 
 void wifi_reboot(void)
 {
-    ESP_LOGI(TAG_WIFI, "WIFI REBOOT...");
-    esp_wifi_disconnect();
-    if (flags.setup_mode == 1)
-    {
-        wifi_ap_config.ap.max_connection = 1;
-        ESP_LOGI(TAG_WIFI, "WIFI SETUP MODE = ON");
-    }
-    else
-    {
-        wifi_ap_config.ap.max_connection = 0;
-        ESP_LOGI(TAG_WIFI, "WIFI SETUP MODE = OFF");
-    }
-    ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_AP, &wifi_ap_config));
+    ESP_LOGI(TAG_WIFI, "REBOOT...");
+    esp_wifi_stop();
 
-    esp_wifi_connect();
+    if (flags.esp_now_initiated == 1)
+    {
+        esp_now_deinit(); 
+        flags.esp_now_initiated = 0;
+    }
+
+    if (flags.wifi_initialized == 1)
+    {
+        ESP_ERROR_CHECK(esp_wifi_deinit());
+        esp_netif_deinit();
+        esp_netif_destroy(esp_netif_sta);
+        esp_netif_destroy(esp_netif_ap);
+        ESP_ERROR_CHECK(esp_event_loop_delete_default());
+        flags.wifi_initialized = 0;
+    }
+
+    wifi_init();
+    my_esp_now_init();
+    esp_wifi_start();
 }
 
 
@@ -253,6 +268,7 @@ esp_err_t stop_setup_mode(void)
 void callback_setup_time_expired(TimerHandle_t xTimer)
 {
     stop_setup_mode();
+    esp_restart();
 }
 
 
@@ -380,8 +396,6 @@ esp_err_t my_esp_now_init(void)
 
     if (!flags.esp_now_initiated)
     {
-        ESP_ERROR_CHECK(esp_wifi_set_protocol(ESP_IF_WIFI_STA, WIFI_PROTOCOL_11B|WIFI_PROTOCOL_11G|WIFI_PROTOCOL_11N|WIFI_PROTOCOL_LR));
-
         ESP_ERROR_CHECK(esp_now_init());
         ESP_LOGI(TAG_WIFI, "ESP_NOW INITIALIZATION...");
 

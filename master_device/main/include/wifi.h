@@ -42,13 +42,16 @@
 #define MAX_SETUP_TIME (1 * 60 * 1000)      // 1min
 
 typedef struct {
-    unsigned int setup_mode : 1;
     unsigned int wifi_initialized : 1;
     unsigned int esp_now_initiated : 1;
     unsigned int sntp_initialized : 1;
+
     unsigned int sta_connected : 1;
     unsigned int ap_connected : 1;
     unsigned int got_ip : 1;
+    unsigned int time_synchronized : 1;
+
+    unsigned int setup_mode : 1;
     unsigned int reboot : 1;
 } wifi_flags_t;
 

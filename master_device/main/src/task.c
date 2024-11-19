@@ -109,7 +109,6 @@ void wifi_reboot_and_led_toggle_task(void *p)
         {
             set_on_wifi_led();
         }
-
         vTaskDelay(WIFI_REBOOT_CHECK_TIME);
     }
 }

@@ -2,6 +2,7 @@
 #include "esp_err.h"
 #include "esp_log.h"
 #include "esp_wifi.h"
+#include "esp_wifi_netif.h"
 #include "esp_wifi_types_generic.h"
 #include "freertos/idf_additions.h"
 #include "include/data.h"
@@ -24,11 +25,19 @@ void app_main(void)
 
     ESP_ERROR_CHECK(wifi_init());
     vTaskDelay(10 / portTICK_PERIOD_MS);
-    esp_wifi_start();
     ESP_ERROR_CHECK(my_esp_now_init());
     vTaskDelay(10 / portTICK_PERIOD_MS);
+    esp_wifi_start();
 
-
-    vTaskSuspend(NULL);
+    //
+    // vTaskDelay(8000 / portTICK_PERIOD_MS);
+    // esp_wifi_stop();
+    //
+    // vTaskDelay(8000 / portTICK_PERIOD_MS);
+    //
+    // esp_wifi_start();
+    // vTaskDelay(8000 / portTICK_PERIOD_MS);
+    // my_sntp_init();
+    // vTaskSuspend(NULL);
 }
 
