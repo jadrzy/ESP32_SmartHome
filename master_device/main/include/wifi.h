@@ -79,6 +79,7 @@ esp_err_t send_espnow_data(send_data_t data);
 wifi_flags_t* get_wifi_flags(void);
 esp_err_t start_setup_mode(void);
 esp_err_t stop_setup_mode(void);
+esp_err_t send_data_to_db(char *string_JSON);
 void wifi_reboot(void);
 
 

@@ -256,6 +256,7 @@ void wifi_send_to_db_task(void *p)
             }
 
             data_str = json_maker(master_device, devices_clone); 
+            send_data_to_db(data_str);
 
         }
         vTaskDelay(2000 / portTICK_PERIOD_MS);
