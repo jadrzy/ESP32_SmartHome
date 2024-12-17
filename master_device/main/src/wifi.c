@@ -18,6 +18,7 @@
 #include "include/task.h"
 #include <stdint.h>
 #include <string.h>
+#include "esp_http_client.h"
 
 #include "include/led.h"
 #include "include/ntp.h"
