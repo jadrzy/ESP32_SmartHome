@@ -599,7 +599,7 @@ esp_err_t send_data_to_db(char *string_JSON)
 
 // POST
     esp_http_client_set_url(client, "http://192.168.0.210:5000/data");
-    char * string_new = ""
+    char * string_new = "{\n  \"serial_master\": \"MD0000000001\",\n  \"timestamp\": 645623527,\n  \"serial_slave_1\": \"SD0000000001\",\n  \"data_slave_1\": {\n    \"lux\": 2,\n    \"temperature\": 20,\n    \"humidity\": 6,\n    \"pressure\": 99\n  }\n}"
     esp_http_client_set_post_field(client, string_JSON, strlen(string_JSON));
     esp_http_client_set_header(client, "Content-Type", "application/json");
 
