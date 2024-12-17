@@ -2,6 +2,7 @@
 #include "esp_err.h"
 #include "esp_log.h"
 #include "freertos/idf_additions.h"
+#include "freertos/projdefs.h"
 #include "include/data.h"
 #include "include/led.h"
 #include "include/wifi.h"
@@ -74,8 +75,12 @@ void send_data_task(void *p)
                 {
                     strcpy(data.serial, devices[i].serial_number);
                     memcpy(data.mac_address, devices[i].mac_address, sizeof(data.mac_address));
-                    data.auto_light = devices[i].light_control.auto_light;
-                    data.light_value = devices[i].light_control.light_value;
+                    if (xSemaphoreTake(semaphores.xMutex_light_control, 10) == pdTRUE) 
+                    {
+                        data.auto_light = devices[i].light_control.auto_light;
+                        data.light_value = devices[i].light_control.light_value;
+                        xSemaphoreGive(semaphores.xMutex_light_control);
+                    }
                     ESP_LOGI(TAG_TASK, "Sending data: lm = %d | light_value = %d", data.auto_light, data.light_value);
                     send_espnow_data(data);
                 }
@@ -110,6 +115,32 @@ void wifi_reboot_and_led_toggle_task(void *p)
             set_on_wifi_led();
         }
         vTaskDelay(WIFI_REBOOT_CHECK_TIME);
+    }
+}
+
+
+void wifi_send_to_db(void *p)
+{
+    static slave_device_t devices[NUMBER_OF_DEVICES];
+    static wifi_flags_t *flags;
+    flags = get_wifi_flags();
+    
+    while(1)
+    {
+        while(flags->got_ip && flags->time_synchronized)
+        {
+            get_slave_devices(devices);
+
+            for (int i = 0; i < NUMBER_OF_DEVICES; i++)
+            {
+                if (devices[i].active)
+                {
+
+                }
+            }
+        }
+
+        vTaskDelay(1000);
     }
 }
 

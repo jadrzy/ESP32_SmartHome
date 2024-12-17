@@ -2,7 +2,7 @@ key,type,encoding,value
 master_device,namespace,,
 serial_number,file,string,serial/serial_number.txt
 slave_device_s,namespace,,
-serial_01,data,string,SD0123456789
+serial_01,data,string,SD0000000001
 serial_02,data,string,
 serial_03,data,string,
 serial_04,data,string,

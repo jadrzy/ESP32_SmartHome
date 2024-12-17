@@ -29,15 +29,4 @@ void app_main(void)
     vTaskDelay(10 / portTICK_PERIOD_MS);
     esp_wifi_start();
 
-    //
-    // vTaskDelay(8000 / portTICK_PERIOD_MS);
-    // esp_wifi_stop();
-    //
-    // vTaskDelay(8000 / portTICK_PERIOD_MS);
-    //
-    // esp_wifi_start();
-    // vTaskDelay(8000 / portTICK_PERIOD_MS);
-    // my_sntp_init();
-    // vTaskSuspend(NULL);
 }
-
