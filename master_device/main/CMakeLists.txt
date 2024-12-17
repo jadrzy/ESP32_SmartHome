@@ -9,6 +9,7 @@ idf_component_register(
         "src/button.c"
         "src/led.c"
         "src/ntp.c"
+        "extlib/cJSON.c"
     INCLUDE_DIRS 
         "."
 )
