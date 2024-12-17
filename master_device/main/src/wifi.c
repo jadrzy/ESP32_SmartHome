@@ -19,6 +19,7 @@
 #include <stdint.h>
 #include <string.h>
 #include "esp_http_client.h"
+#include "esp_tls.h"
 
 #include "include/led.h"
 #include "include/ntp.h"
@@ -510,6 +511,7 @@ esp_err_t http_event_handler(esp_http_client_event_t *evt)
             // Clean the buffer in case of a new request
             if (output_len == 0 && evt->user_data) {
                 // we are just starting to copy the output data into the use
+                ESP_LOGI(TAG_WIFI, "%s", (char*)evt->user_data);
                 memset(evt->user_data, 0, MAX_HTTP_OUTPUT_BUFFER);
             }
             /*
@@ -520,28 +522,28 @@ esp_err_t http_event_handler(esp_http_client_event_t *evt)
                 // If user_data buffer is configured, copy the response into the buffer
                 int copy_len = 0;
 
-                // if (evt->user_data) {
-                //     // The last byte in evt->user_data is kept for the NULL character in case of out-of-bound access.
-                //     copy_len = MIN(evt->data_len, (MAX_HTTP_OUTPUT_BUFFER - output_len));
-                //     if (copy_len) {
-                //         memcpy(evt->user_data + output_len, evt->data, copy_len);
-                //     }
-                // } else {
-                //     int content_len = esp_http_client_get_content_length(evt->client);
-                //     if (output_buffer == NULL) {
-                //         // We initialize output_buffer with 0 because it is used by strlen() and similar functions therefore should be null terminated.
-                //         output_buffer = (char *) calloc(content_len + 1, sizeof(char));
-                //         output_len = 0;
-                //         if (output_buffer == NULL) {
-                //             ESP_LOGE(TAG, "Failed to allocate memory for output buffer");
-                //             return ESP_FAIL;
-                //         }
-                //     }
-                //     copy_len = MIN(evt->data_len, (content_len - output_len));
-                //     if (copy_len) {
-                //         memcpy(output_buffer + output_len, evt->data, copy_len);
-                //     }
-                // }
+                if (evt->user_data) {
+                    // The last byte in evt->user_data is kept for the NULL character in case of out-of-bound access.
+                    evt->data_len < (MAX_HTTP_OUTPUT_BUFFER - output_len) ? copy_len = evt->data_len : (MAX_HTTP_OUTPUT_BUFFER - output_len);
+                    if (copy_len) {
+                        memcpy(evt->user_data + output_len, evt->data, copy_len);
+                    }
+                } else {
+                    int content_len = esp_http_client_get_content_length(evt->client);
+                    if (output_buffer == NULL) {
+                        // We initialize output_buffer with 0 because it is used by strlen() and similar functions therefore should be null terminated.
+                        output_buffer = (char *) calloc(content_len + 1, sizeof(char));
+                        output_len = 0;
+                        if (output_buffer == NULL) {
+                            ESP_LOGE(TAG_WIFI, "Failed to allocate memory for output buffer");
+                            return ESP_FAIL;
+                        }
+                    }
+                    evt->data_len < (content_len - output_len) ? copy_len = evt->data_len : (content_len - output_len);
+                    if (copy_len) {
+                        memcpy(output_buffer + output_len, evt->data, copy_len);
+                    }
+                }
                 output_len += copy_len;
             }
 
@@ -550,7 +552,7 @@ esp_err_t http_event_handler(esp_http_client_event_t *evt)
             ESP_LOGI(TAG_WIFI, "HTTP_EVENT_ON_FINISH");
             if (output_buffer != NULL) {
                 // Response is accumulated in output_buffer. Uncomment the below line to print the accumulated response
-                // ESP_LOG_BUFFER_HEX(TAG, output_buffer, output_len);
+                ESP_LOG_BUFFER_HEX(TAG_WIFI, output_buffer, output_len);
                 free(output_buffer);
                 output_buffer = NULL;
             }
@@ -558,23 +560,20 @@ esp_err_t http_event_handler(esp_http_client_event_t *evt)
             break;
         case HTTP_EVENT_DISCONNECTED:
             ESP_LOGI(TAG_WIFI, "HTTP_EVENT_DISCONNECTED");
-            // int mbedtls_err = 0;
-            // esp_err_t err = esp_tls_get_and_clear_last_error((esp_tls_error_handle_t)evt->data, &mbedtls_err, NULL);
-            // if (err != 0) {
-            //     ESP_LOGI(TAG, "Last esp error code: 0x%x", err);
-            //     ESP_LOGI(TAG, "Last mbedtls failure: 0x%x", mbedtls_err);
-            // }
-            // if (output_buffer != NULL) {
-            //     free(output_buffer);
-            //     output_buffer = NULL;
-            // }
-            // output_len = 0;
+            int mbedtls_err = 0;
+            esp_err_t err = esp_tls_get_and_clear_last_error((esp_tls_error_handle_t)evt->data, &mbedtls_err, NULL);
+            if (err != 0) {
+                ESP_LOGI(TAG_WIFI, "Last esp error code: 0x%x", err);
+                ESP_LOGI(TAG_WIFI, "Last mbedtls failure: 0x%x", mbedtls_err);
+            }
+            if (output_buffer != NULL) {
+                free(output_buffer);
+                output_buffer = NULL;
+            }
+            output_len = 0;
             break;
         case HTTP_EVENT_REDIRECT:
             ESP_LOGI(TAG_WIFI, "HTTP_EVENT_REDIRECT");
-            // esp_http_client_set_header(evt->client, "From", "user@example.com");
-            // esp_http_client_set_header(evt->client, "Accept", "text/html");
-            // esp_http_client_set_redirection(evt->client);
             break;
     }
     return ESP_OK;
@@ -595,15 +594,11 @@ esp_err_t send_data_to_db(char *string_JSON)
         .event_handler = http_event_handler,
     };
     esp_http_client_handle_t client = esp_http_client_init(&config);
-    ESP_LOGI(TAG_WIFI, "FLAGA");
 
 // POST
     esp_http_client_set_url(client, "http://192.168.0.210:5000/data");
-    char * string_new = "{\n  \"serial_master\": \"MD0000000001\",\n  \"timestamp\": 645623527,\n  \"serial_slave_1\": \"SD0000000001\",\n  \"data_slave_1\": {\n    \"lux\": 2,\n    \"temperature\": 20,\n    \"humidity\": 6,\n    \"pressure\": 99\n  }\n}"
     esp_http_client_set_post_field(client, string_JSON, strlen(string_JSON));
     esp_http_client_set_header(client, "Content-Type", "application/json");
-
-    ESP_LOGI(TAG_WIFI, "%s", string_JSON);
 
     esp_http_client_set_method(client, HTTP_METHOD_POST);
     err = esp_http_client_perform(client);

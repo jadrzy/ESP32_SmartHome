@@ -131,7 +131,7 @@ static char *json_maker(master_device_t master_device, slave_device_t devices[NU
     cJSON *humidity;
     cJSON *pressure;
     char key[16];
-    char tail[2];
+    char tail[3];
 
     // Creating JSON
     cJSON *data = cJSON_CreateObject();
@@ -164,7 +164,7 @@ static char *json_maker(master_device_t master_device, slave_device_t devices[NU
         // Slave device serial number
         if (devices[i].active)
         {
-            sprintf(tail, "%d", i);
+            sprintf(tail, "%d", (i + 1));
             strcpy(key, "serial_slave_");
             strcat(key, tail);
             serial_slave = cJSON_CreateString(devices[i].serial_number);
@@ -237,7 +237,6 @@ void wifi_send_to_db_task(void *p)
 {
     static master_device_t master_device;
     static slave_device_t devices[NUMBER_OF_DEVICES];
-    static slave_device_t devices_clone[NUMBER_OF_DEVICES];
     get_slave_devices(devices);
     get_master_device(master_device.serial_number, master_device.mac_address);
 
@@ -249,13 +248,9 @@ void wifi_send_to_db_task(void *p)
     {
         if (flags->got_ip && flags->time_synchronized)
         {
-            if (xSemaphoreTake(semaphores.xMutex_sensor_data, 10) == pdTRUE) 
-            {
-                memcpy(devices_clone, devices, sizeof(devices)); 
-                xSemaphoreGive(semaphores.xMutex_sensor_data);
-            }
-
-            data_str = json_maker(master_device, devices_clone); 
+            get_slave_devices(devices);
+            set_old_data();
+            data_str = json_maker(master_device, devices); 
             send_data_to_db(data_str);
 
         }

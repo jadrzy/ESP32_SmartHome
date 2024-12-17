@@ -89,3 +89,11 @@ void get_slave_devices(slave_device_t devices[NUMBER_OF_DEVICES])
         devices[i] = slave_devices[i];
     }
 }
+
+void set_old_data(void)
+{
+    for (int i = 0; i < NUMBER_OF_DEVICES; i++)
+    {
+        slave_devices[i].new_data = false;
+    }
+}
