@@ -9,6 +9,7 @@
 #include "tasks/wifi/wifi.h"
 #include "tasks/data/data.h"
 #include <stdint.h>
+#include "drivers/light_control/light_control.h"
 
 static const char TAG_TASK[] = "TASK";
 
@@ -17,6 +18,7 @@ static struct i2c i2c_handles;
 static struct task_handles task_handles;
 static TimerHandle_t channel_sniffer_timer = NULL;
 
+static unsigned int light_period = 0;
 
 // Mutex handles for sensor data protection
 static SemaphoreHandle_t 
@@ -24,7 +26,8 @@ static SemaphoreHandle_t
     xMutex_Humidity,
     xMutex_Temperature,
     xMutex_Pressure,
-    xMutex_Light_settings;
+    xMutex_Light_settings,
+    xMutex_Light_period;
 
 
 // Function to initialize all sensors
@@ -115,27 +118,69 @@ void task_fun_get_pressure_value(void *p)
     }
 }
 
-void task_light_control(void *p)
+void task_adjust_light_control_period(void *p)
 {
-    uint8_t mode;
-    int value;
-    // Protect and update pressure value with mutex
+    uint8_t automatic = 0;
+    int value = 0; // in range (0-100)
+    int new_period = 0; 
     while(1)
     {
+        // Protect and update pressure value with mutex
         if (xSemaphoreTake(xMutex_Light_settings, 10) == pdTRUE)
         {
-            mode = get_light_mode();
+            automatic = get_light_mode();
             value = get_light_value();
             xSemaphoreGive(xMutex_Light_settings);
         }
 
 
+        if (automatic == true)  // AUTOMATIC MODE
+        {
 
-    // FUTURE CODE //
+            if (xSemaphoreTake(xMutex_Light_period, 10) == pdTRUE)
+            {
+                light_period = new_period;
+                xSemaphoreGive(xMutex_Light_period);
+            }
+            ESP_LOGI(TAG_TASK, "Automatic = %d", light_period);
+            vTaskDelay(LIGHT_SENSOR_MEASUREMENT_TIME);
+        }
+        else                    // MANUAL MODE
+        {
+            new_period = (value / 10);
+            new_period = 5;
+            if (xSemaphoreTake(xMutex_Light_period, 10) == pdTRUE)
+            {
+                light_period = new_period;
+                xSemaphoreGive(xMutex_Light_period);
+            }
 
+            ESP_LOGI(TAG_TASK, "Manual = %d", light_period);
+            vTaskDelay(1000 / portTICK_PERIOD_MS);
+        }
+    }
+}
 
+void task_light_control(void *p)
+{
+    static bool *zero_crossing;
+    zero_crossing = get_flag_zero_cossed();
+    static unsigned int period = 0;
 
-        vTaskDelay(LIGHT_SENSOR_MEASUREMENT_TIME);
+    while(1)
+    {
+        if (*zero_crossing == true)
+        {
+            ESP_LOGI(TAG_TASK, "ZERO CROSSING");
+            if (xSemaphoreTake(xMutex_Light_period, 10) == pdTRUE)
+            {
+                period = light_period;
+                xSemaphoreGive(xMutex_Light_period);
+            }
+            light_toggle(period);
+            *zero_crossing = false;
+        }
+        vTaskDelay(1);
     }
 }
 
@@ -335,8 +380,11 @@ void initialize_tasks(void)
     xMutex_Temperature = xSemaphoreCreateMutex();
     xMutex_Pressure = xSemaphoreCreateMutex();
     xMutex_Light_settings = xSemaphoreCreateMutex();
+    xMutex_Light_period = xSemaphoreCreateMutex();
 
     recieve_data_queue = xQueueCreate(2, sizeof(recv_data_t));
+
+    light_control_setup();
 
     // Create tasks for reading sensors and logging data
     xTaskCreatePinnedToCore(task_fun_get_lux_value, "Get_Lux_Task", 6144, NULL, 5, &task_handles.lux_task, 1);
@@ -344,7 +392,8 @@ void initialize_tasks(void)
     xTaskCreatePinnedToCore(task_fun_get_pressure_value, "Get_Pressure_Task", 6144, NULL, 5, &task_handles.press_task, 1);
     xTaskCreatePinnedToCore(recv_queue_task, "Handle_rec_data", 6144, NULL, 6, &task_handles.recieve_data_task, 1);
     xTaskCreatePinnedToCore(task_channel_sniffer, "Toggle wifi channel", 4096, NULL, 4, &task_handles.channel_sniffer_task, 1);
-    xTaskCreatePinnedToCore(task_light_control, "Light control task", 4096, NULL, 3, &task_handles.light_control_task, 1);
+    xTaskCreatePinnedToCore(task_light_control, "Light control task", 4096, NULL, 10, &task_handles.light_control_task, 1);
+    xTaskCreatePinnedToCore(task_adjust_light_control_period, "Light period adjust task", 4096, NULL, 5, &task_handles.light_period_adjust_task, 1);
 
     channel_sniffer_timer = xTimerCreate(
         "Disconnect timer",

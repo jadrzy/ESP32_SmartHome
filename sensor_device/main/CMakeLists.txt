@@ -11,6 +11,7 @@ idf_component_register(
     "tasks/drivers/light_sensor/calculate_lux.c"
     "tasks/drivers/temp_hum_sensor/temp_hum_sensor.c"
     "tasks/drivers/pressure_sensor/pressure_sensor.c"
+    "tasks/drivers/light_control/light_control.c"
   
   INCLUDE_DIRS 
     "."

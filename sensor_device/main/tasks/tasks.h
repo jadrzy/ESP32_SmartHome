@@ -29,6 +29,7 @@ struct task_handles {
     TaskHandle_t channel_sniffer_task;       // Task handle for Wi-Fi task
     TaskHandle_t recieve_data_task;
     TaskHandle_t light_control_task;
+    TaskHandle_t light_period_adjust_task;
 };
 
 
