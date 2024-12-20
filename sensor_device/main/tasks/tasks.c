@@ -142,47 +142,51 @@ void task_adjust_light_control_period(void *p)
                 light_period = new_period;
                 xSemaphoreGive(xMutex_Light_period);
             }
-            ESP_LOGI(TAG_TASK, "Automatic = %d", light_period);
+            // ESP_LOGI(TAG_TASK, "Automatic = %d", light_period);
             vTaskDelay(LIGHT_SENSOR_MEASUREMENT_TIME);
         }
         else                    // MANUAL MODE
         {
             new_period = (value / 10);
-            new_period = 5;
             if (xSemaphoreTake(xMutex_Light_period, 10) == pdTRUE)
             {
                 light_period = new_period;
                 xSemaphoreGive(xMutex_Light_period);
             }
 
-            ESP_LOGI(TAG_TASK, "Manual = %d", light_period);
+            // ESP_LOGI(TAG_TASK, "Manual = %d", light_period);
             vTaskDelay(1000 / portTICK_PERIOD_MS);
         }
     }
 }
 
-void task_light_control(void *p)
+unsigned int *get_light_period(void)
 {
-    static bool *zero_crossing;
-    zero_crossing = get_flag_zero_cossed();
-    static unsigned int period = 0;
-
-    while(1)
-    {
-        if (*zero_crossing == true)
-        {
-            ESP_LOGI(TAG_TASK, "ZERO CROSSING");
-            if (xSemaphoreTake(xMutex_Light_period, 10) == pdTRUE)
-            {
-                period = light_period;
-                xSemaphoreGive(xMutex_Light_period);
-            }
-            light_toggle(period);
-            *zero_crossing = false;
-        }
-        vTaskDelay(1);
-    }
+    return &light_period;
 }
+
+// void task_light_control(void *p)
+// {
+//     static bool *zero_crossing;
+//     zero_crossing = get_flag_zero_cossed();
+//     static unsigned int period = 0;
+//
+//     while(1)
+//     {
+//         if (*zero_crossing == true)
+//         {
+//             ESP_LOGI(TAG_TASK, "ZERO CROSSING");
+//             if (xSemaphoreTake(xMutex_Light_period, 10) == pdTRUE)
+//             {
+//                 period = light_period;
+//                 xSemaphoreGive(xMutex_Light_period);
+//             }
+//             light_toggle(period);
+//             *zero_crossing = false;
+//         }
+//         vTaskDelay(1);
+//     }
+// }
 
 void task_channel_sniffer(void *p)
 {
@@ -393,7 +397,7 @@ void initialize_tasks(void)
     xTaskCreatePinnedToCore(recv_queue_task, "Handle_rec_data", 6144, NULL, 6, &task_handles.recieve_data_task, 1);
     xTaskCreatePinnedToCore(task_channel_sniffer, "Toggle wifi channel", 4096, NULL, 4, &task_handles.channel_sniffer_task, 1);
     // xTaskCreatePinnedToCore(task_light_control, "Light control task", 4096, NULL, 10, &task_handles.light_control_task, 1);
-    // xTaskCreatePinnedToCore(task_adjust_light_control_period, "Light period adjust task", 4096, NULL, 5, &task_handles.light_period_adjust_task, 1);
+    xTaskCreatePinnedToCore(task_adjust_light_control_period, "Light period adjust task", 4096, NULL, 5, &task_handles.light_period_adjust_task, 1);
 
     channel_sniffer_timer = xTimerCreate(
         "Disconnect timer",

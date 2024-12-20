@@ -41,6 +41,7 @@ void task_fun_get_lux_value(void *pvParameters);          // Task to get light s
 void task_fun_get_temp_hum_values(void *pvParameters);    // Task to get temperature & humidity sensor values
 void task_fun_get_pressure_value(void *pvParameters);     // Task to get pressure sensor value
 void task_debug(void *pvParameters);                      // Debug task function
+unsigned int *get_light_period(void);
 
 // Function to initialize and create FreeRTOS tasks
 void initialize_tasks(void);
