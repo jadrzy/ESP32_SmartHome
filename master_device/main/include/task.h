@@ -19,6 +19,7 @@
 #include <esp_log.h>
 
 #define WIFI_REBOOT_CHECK_TIME (1000 / portTICK_PERIOD_MS)
+#define SEND_TO_DB_TIME (5000 / portTICK_PERIOD_MS)
 
 typedef struct {
     SemaphoreHandle_t xMutex_sensor_data;

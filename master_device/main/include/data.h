@@ -57,5 +57,6 @@ void set_slave_devices(slave_device_t devices[NUMBER_OF_DEVICES]);
 void set_old_data(void);
 
 esp_err_t set_slave_device_sensor(const uint8_t mac_address[6], const char serial[SERIAL_NUMBER_SIZE], sensor_data_t data);
+esp_err_t set_light_data(int id, char serial[SERIAL_NUMBER_SIZE], light_control_t data);
 
 #endif 

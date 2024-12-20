@@ -392,8 +392,8 @@ void initialize_tasks(void)
     xTaskCreatePinnedToCore(task_fun_get_pressure_value, "Get_Pressure_Task", 6144, NULL, 5, &task_handles.press_task, 1);
     xTaskCreatePinnedToCore(recv_queue_task, "Handle_rec_data", 6144, NULL, 6, &task_handles.recieve_data_task, 1);
     xTaskCreatePinnedToCore(task_channel_sniffer, "Toggle wifi channel", 4096, NULL, 4, &task_handles.channel_sniffer_task, 1);
-    xTaskCreatePinnedToCore(task_light_control, "Light control task", 4096, NULL, 10, &task_handles.light_control_task, 1);
-    xTaskCreatePinnedToCore(task_adjust_light_control_period, "Light period adjust task", 4096, NULL, 5, &task_handles.light_period_adjust_task, 1);
+    // xTaskCreatePinnedToCore(task_light_control, "Light control task", 4096, NULL, 10, &task_handles.light_control_task, 1);
+    // xTaskCreatePinnedToCore(task_adjust_light_control_period, "Light period adjust task", 4096, NULL, 5, &task_handles.light_period_adjust_task, 1);
 
     channel_sniffer_timer = xTimerCreate(
         "Disconnect timer",

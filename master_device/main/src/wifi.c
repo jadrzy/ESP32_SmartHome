@@ -24,6 +24,7 @@
 #include "include/led.h"
 #include "include/ntp.h"
 #include "portmacro.h"
+#include "extlib/cJSON.h"
 
 #define MAX_RETRIES_ESP_NOW 10
 
@@ -483,10 +484,7 @@ esp_err_t my_esp_now_init(void)
 }
 
 
-
-
 // HTTPS
-
 #define MAX_HTTP_OUTPUT_BUFFER 2048
 
 esp_err_t http_event_handler(esp_http_client_event_t *evt)
@@ -498,26 +496,18 @@ esp_err_t http_event_handler(esp_http_client_event_t *evt)
             ESP_LOGE(TAG_WIFI, "HTTP_EVENT_ERROR");
             break;
         case HTTP_EVENT_ON_CONNECTED:
-            ESP_LOGI(TAG_WIFI, "HTTP_EVENT_ON_CONNECTED");
             break;
         case HTTP_EVENT_HEADER_SENT:
-            ESP_LOGI(TAG_WIFI, "HTTP_EVENT_HEADER_SENT");
             break;
         case HTTP_EVENT_ON_HEADER:
-            ESP_LOGI(TAG_WIFI, "HTTP_EVENT_ON_HEADER, key=%s, value=%s", evt->header_key, evt->header_value);
+            // ESP_LOGI(TAG_WIFI, "HTTP_EVENT_ON_HEADER, key=%s, value=%s", evt->header_key, evt->header_value);
             break;
         case HTTP_EVENT_ON_DATA:
-            ESP_LOGI(TAG_WIFI, "HTTP_EVENT_ON_DATA, len=%d", evt->data_len);
             // Clean the buffer in case of a new request
             if (output_len == 0 && evt->user_data) {
                 // we are just starting to copy the output data into the use
-                ESP_LOGI(TAG_WIFI, "%s", (char*)evt->user_data);
                 memset(evt->user_data, 0, MAX_HTTP_OUTPUT_BUFFER);
             }
-            /*
-             *  Check for chunked encoding is added as the URL for chunked encoding used in this example returns binary data.
-             *  However, event handler can also be used in case chunked encoding is used.
-             */
             if (!esp_http_client_is_chunked_response(evt->client)) {
                 // If user_data buffer is configured, copy the response into the buffer
                 int copy_len = 0;
@@ -549,23 +539,14 @@ esp_err_t http_event_handler(esp_http_client_event_t *evt)
 
             break;
         case HTTP_EVENT_ON_FINISH:
-            ESP_LOGI(TAG_WIFI, "HTTP_EVENT_ON_FINISH");
             if (output_buffer != NULL) {
                 // Response is accumulated in output_buffer. Uncomment the below line to print the accumulated response
-                ESP_LOG_BUFFER_HEX(TAG_WIFI, output_buffer, output_len);
                 free(output_buffer);
                 output_buffer = NULL;
             }
             output_len = 0;
             break;
         case HTTP_EVENT_DISCONNECTED:
-            ESP_LOGI(TAG_WIFI, "HTTP_EVENT_DISCONNECTED");
-            int mbedtls_err = 0;
-            esp_err_t err = esp_tls_get_and_clear_last_error((esp_tls_error_handle_t)evt->data, &mbedtls_err, NULL);
-            if (err != 0) {
-                ESP_LOGI(TAG_WIFI, "Last esp error code: 0x%x", err);
-                ESP_LOGI(TAG_WIFI, "Last mbedtls failure: 0x%x", mbedtls_err);
-            }
             if (output_buffer != NULL) {
                 free(output_buffer);
                 output_buffer = NULL;
@@ -579,9 +560,58 @@ esp_err_t http_event_handler(esp_http_client_event_t *evt)
     return ESP_OK;
 }
 
+
+static int decode_json_and_save(const char *strJSON)
+{
+    char new_serial[SERIAL_NUMBER_SIZE];
+    light_control_t new_data;
+
+    const cJSON *serial_number = NULL;
+    const cJSON *light_mode = NULL;
+    const cJSON *light_value = NULL;
+
+    slave_device_t slaves[NUMBER_OF_DEVICES];
+    get_slave_devices(slaves);
+
+    int status = 0;
+    cJSON *str = cJSON_Parse(strJSON);
+    if (str == NULL)
+    {
+        const char *error_ptr = cJSON_GetErrorPtr();
+        if (error_ptr != NULL)
+        {
+            ESP_LOGE(TAG_WIFI, "Error before %s\n", error_ptr);
+        }
+        status = 0;
+        goto end;
+    }
+
+    for (int i = 0; i < NUMBER_OF_DEVICES; i++)
+    {
+        serial_number = cJSON_GetObjectItemCaseSensitive(str, slaves[i].serial_number);
+        if (serial_number != NULL)
+        {
+            strcpy(new_serial, serial_number->string);
+
+            light_mode = cJSON_GetObjectItemCaseSensitive(serial_number, "light_mode");
+            new_data.auto_light = light_mode->valueint;
+
+            light_value = cJSON_GetObjectItemCaseSensitive(serial_number, "light_value");
+            new_data.light_value = light_value->valueint - 10;
+
+            set_light_data(i, serial_number->string, new_data);
+        }
+    }
+
+
+end:
+    cJSON_Delete(str);
+    return status;
+}
+
+
 esp_err_t send_data_to_db(char *string_JSON)
 {
-
     char local_response_buffer[MAX_HTTP_OUTPUT_BUFFER + 1] = {0};
 
     esp_err_t err = ESP_OK;
@@ -596,20 +626,21 @@ esp_err_t send_data_to_db(char *string_JSON)
     esp_http_client_handle_t client = esp_http_client_init(&config);
 
 // POST
-    esp_http_client_set_url(client, "http://192.168.0.210:5000/data");
+    esp_http_client_set_url(client, "http://192.168.1.104:5000/data");
     esp_http_client_set_post_field(client, string_JSON, strlen(string_JSON));
     esp_http_client_set_header(client, "Content-Type", "application/json");
 
     esp_http_client_set_method(client, HTTP_METHOD_POST);
+
+    ESP_LOGI(TAG_WIFI, "Posting data to database");
     err = esp_http_client_perform(client);
     if (err == ESP_OK) {
-        ESP_LOGI(TAG_WIFI, "HTTP POST Status = %d, content_length = %"PRId64,
-                esp_http_client_get_status_code(client),
-                esp_http_client_get_content_length(client));
+        decode_json_and_save(local_response_buffer);
+        ESP_LOGI(TAG_WIFI, "Recieved data from database");
     } else {
         ESP_LOGE(TAG_WIFI, "HTTP POST request failed: %s", esp_err_to_name(err));
     }
-    
+
     esp_http_client_cleanup(client);
 
     return err;

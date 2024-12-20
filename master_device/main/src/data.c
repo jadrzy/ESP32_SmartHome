@@ -82,6 +82,25 @@ void get_master_device(char serial[SERIAL_NUMBER_SIZE], uint8_t mac[6])
     memcpy(mac, master_device.mac_address, 6);
 }
 
+esp_err_t set_light_data(int id, char serial[SERIAL_NUMBER_SIZE], light_control_t data)
+{
+    esp_err_t err = ESP_ERR_NOT_FOUND;
+    semaphore_handles_t *sem = NULL;
+    sem = get_semaphores();
+
+    if (strcmp(serial, slave_devices[id].serial_number) == 0)
+    {
+        if (xSemaphoreTake(sem->xMutex_light_control, 10) == pdTRUE)
+        {
+            slave_devices[id].light_control = data;
+            xSemaphoreGive(sem->xMutex_light_control);
+        }
+        err = ESP_OK;
+    }
+
+    return err;
+}
+
 void get_slave_devices(slave_device_t devices[NUMBER_OF_DEVICES])
 {
     for (int i = 0; i < NUMBER_OF_DEVICES; i++)

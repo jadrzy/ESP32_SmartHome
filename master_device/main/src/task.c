@@ -263,7 +263,7 @@ void wifi_send_to_db_task(void *p)
             send_data_to_db(data_str);
 
         }
-        vTaskDelay(2000 / portTICK_PERIOD_MS);
+        vTaskDelay(SEND_TO_DB_TIME);
     }
 }
 
