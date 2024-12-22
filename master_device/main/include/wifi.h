@@ -74,6 +74,7 @@ typedef struct {
 
 
 esp_err_t wifi_init();
+void set_http_cred(char *url_new, char *api_key_new);
 esp_err_t my_esp_now_init(void);
 esp_err_t send_espnow_data(send_data_t data);
 wifi_flags_t* get_wifi_flags(void);
