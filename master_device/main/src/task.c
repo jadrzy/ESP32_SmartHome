@@ -73,15 +73,6 @@ void send_data_task(void *p)
             {
                 if (devices[i].active)
                 {
-                    // DEBUGGGGGGGGG
-                    if (xSemaphoreTake(semaphores.xMutex_light_control, 10) == pdTRUE) 
-                    {
-                        devices[i].light_control.light_value = devices[i].light_control.light_value + 10;
-                        xSemaphoreGive(semaphores.xMutex_light_control);
-                    }
-                    ///////////////////
-
-
                     strcpy(data.serial, devices[i].serial_number);
                     memcpy(data.mac_address, devices[i].mac_address, sizeof(data.mac_address));
                     if (xSemaphoreTake(semaphores.xMutex_light_control, 10) == pdTRUE) 
@@ -255,7 +246,7 @@ void wifi_send_to_db_task(void *p)
     
     while(1)
     {
-        if (flags->got_ip && flags->time_synchronized)
+        if (flags->got_ip && flags->time_synchronized && !flags->setup_mode)
         {
             get_slave_devices(devices);
             set_old_data();

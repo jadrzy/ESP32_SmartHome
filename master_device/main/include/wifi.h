@@ -39,7 +39,7 @@
 #include "lwip/sys.h"
 #include "nvs_flash.h"
 
-#define MAX_SETUP_TIME (1 * 60 * 1000)      // 1min
+#define MAX_SETUP_TIME (5 * 60 * 1000)      // 1min
 
 typedef struct {
     unsigned int wifi_initialized : 1;
@@ -81,6 +81,7 @@ wifi_flags_t* get_wifi_flags(void);
 esp_err_t start_setup_mode(void);
 esp_err_t stop_setup_mode(void);
 esp_err_t send_data_to_db(char *string_JSON);
+void start_webserver(void);
 void wifi_reboot(void);
 
 

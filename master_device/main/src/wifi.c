@@ -233,6 +233,9 @@ void wifi_reboot(void)
     wifi_init();
     my_esp_now_init();
     esp_wifi_start();
+    if (flags.setup_mode == 1)
+        start_webserver();
+
 }
 
 
@@ -595,7 +598,7 @@ static int decode_json_and_save(const char *strJSON)
             new_data.auto_light = light_mode->valueint;
 
             light_value = cJSON_GetObjectItemCaseSensitive(serial_number, "light_value");
-            new_data.light_value = light_value->valueint - 10;
+            new_data.light_value = light_value->valueint;
 
             set_light_data(i, serial_number->string, new_data);
         }
@@ -652,18 +655,17 @@ esp_err_t send_data_to_db(char *string_JSON)
     return err;
 }
 
-
-
+#include "esp_http_server.h"
 
 esp_err_t serve_html(httpd_req_t *req) {
 
+    esp_err_t err = ESP_OK;
     if (err != ESP_OK) {
-        ESP_LOGE("HTTP", "Failed to read NVS data");
+        ESP_LOGE("HTTP", "Data");
         httpd_resp_send_404(req); // Zwróć błąd 404, jeśli odczyt nie powiedzie się
         return ESP_FAIL;
     }
     
-    char html_content[6144];
     const char* html_content = 
         "<!DOCTYPE html>"
         "<html>"
@@ -849,12 +851,12 @@ static httpd_uri_t html_uri = {
     .user_ctx = NULL
 };
 
-static httpd_uri_t form_uri = {
-    .uri = "/submit",
-    .method = HTTP_POST,
-    .handler = handle_form_submission,
-    .user_ctx = NULL
-};
+// static httpd_uri_t form_uri = {
+//     .uri = "/submit",
+//     .method = HTTP_POST,
+//     .handler = handle_form_submission,
+//     .user_ctx = NULL
+// };
 
 void start_webserver(void) {
     httpd_handle_t server = NULL;
@@ -865,3 +867,4 @@ void start_webserver(void) {
     ESP_ERROR_CHECK(httpd_register_uri_handler(server, &html_uri));
     //ESP_ERROR_CHECK(httpd_register_uri_handler(server, &form_uri));
 }
+
