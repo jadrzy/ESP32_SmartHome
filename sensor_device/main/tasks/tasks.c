@@ -12,11 +12,7 @@
 #include "drivers/light_control/light_control.h"
 
 
-#define FUZZY_BIG       30
-#define FUZZY_MEDIUM    20 
-#define FUZZY_SMALLx1   10
-#define FUZZY_SMALLx2   5
-#define FUZZY_SMALLx3   3
+
 
 static const char TAG_TASK[] = "TASK";
 
