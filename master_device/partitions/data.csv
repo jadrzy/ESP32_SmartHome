@@ -24,5 +24,5 @@ mac_08,data,u64,0
 mac_09,data,u64,0 
 mac_10,data,u64,0
 WIFI_SM,namespace,,
-SSID,data,string,giga34
-PSSWD,data,string,net556086
+SSID,data,string,pxs.pl_5537
+PSSWD,data,string,RmT8rvMitaQKtFL

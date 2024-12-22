@@ -626,7 +626,7 @@ esp_err_t send_data_to_db(char *string_JSON)
     esp_http_client_handle_t client = esp_http_client_init(&config);
 
 // POST
-    esp_http_client_set_url(client, "http://192.168.1.104:5000/data");
+    esp_http_client_set_url(client, "http://192.168.0.210:5000/data");
     esp_http_client_set_post_field(client, string_JSON, strlen(string_JSON));
     esp_http_client_set_header(client, "Content-Type", "application/json");
 

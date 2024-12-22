@@ -11,6 +11,13 @@
 #include <stdint.h>
 #include "drivers/light_control/light_control.h"
 
+
+#define FUZZY_BIG       30
+#define FUZZY_MEDIUM    20 
+#define FUZZY_SMALLx1   10
+#define FUZZY_SMALLx2   5
+#define FUZZY_SMALLx3   3
+
 static const char TAG_TASK[] = "TASK";
 
 // Static handles for I2C and task management
@@ -122,7 +129,12 @@ void task_adjust_light_control_period(void *p)
 {
     uint8_t automatic = 0;
     int value = 0; // in range (0-100)
+    
     int new_period = 0; 
+
+    int current_lux = 0;
+    int difference = 0;
+
     while(1)
     {
         // Protect and update pressure value with mutex
@@ -133,29 +145,76 @@ void task_adjust_light_control_period(void *p)
             xSemaphoreGive(xMutex_Light_settings);
         }
 
+        if (value > 100 || value < 0)
+        {
+            ESP_LOGI(TAG_TASK, "Wrong light value = %d", value);
+            continue;
+        }
 
         if (automatic == true)  // AUTOMATIC MODE
         {
+            if (xSemaphoreTake(xMutex_Lux, 10) == pdTRUE)
+            {
+                current_lux = get_lux();
+                xSemaphoreGive(xMutex_Lux);
+            }
+
+
+            difference = value - current_lux;
+
+
+            if (difference > 0)
+            {
+                if (difference >= FUZZY_BIG)
+                   new_period -= FUZZY_BIG * 10; 
+                else if (difference < FUZZY_BIG || difference >= FUZZY_MEDIUM)
+                   new_period -= FUZZY_MEDIUM * 10; 
+                else if (difference < FUZZY_MEDIUM || difference >= FUZZY_SMALLx1)
+                   new_period -= FUZZY_SMALLx1 * 10; 
+                else if (difference < FUZZY_SMALLx1 || difference >= FUZZY_SMALLx2)
+                   new_period -= FUZZY_SMALLx2 * 10; 
+                else if (difference > FUZZY_SMALLx2 || difference >= FUZZY_SMALLx3)
+                   new_period -= FUZZY_SMALLx3 * 10; 
+            }
+            else 
+            {
+                difference = abs(difference);
+
+                if (difference >= FUZZY_BIG)
+                   new_period += FUZZY_BIG * 10; 
+                else if (difference < FUZZY_BIG || difference >= FUZZY_MEDIUM)
+                   new_period += FUZZY_MEDIUM * 10; 
+                else if (difference < FUZZY_MEDIUM || difference >= FUZZY_SMALLx1)
+                   new_period += FUZZY_SMALLx1 * 10; 
+                else if (difference < FUZZY_SMALLx1 || difference >= FUZZY_SMALLx2)
+                   new_period += FUZZY_SMALLx2 * 10; 
+                else if (difference > FUZZY_SMALLx2 || difference >= FUZZY_SMALLx3)
+                   new_period += FUZZY_SMALLx3 * 10; 
+            }
+
+            if (new_period < 0)
+                new_period = 0;
+            if (new_period > 10000)
+                new_period = 10000;
 
             if (xSemaphoreTake(xMutex_Light_period, 10) == pdTRUE)
             {
                 light_period = new_period;
                 xSemaphoreGive(xMutex_Light_period);
             }
-            // ESP_LOGI(TAG_TASK, "Automatic = %d", light_period);
-            vTaskDelay(LIGHT_SENSOR_MEASUREMENT_TIME);
+            vTaskDelay(LIGHT_SENSOR_MEASUREMENT_TIME * 4);
         }
         else                    // MANUAL MODE
         {
-            new_period = (value / 10);
+            new_period = 10000 - (value * 100);
             if (xSemaphoreTake(xMutex_Light_period, 10) == pdTRUE)
             {
                 light_period = new_period;
                 xSemaphoreGive(xMutex_Light_period);
             }
 
-            // ESP_LOGI(TAG_TASK, "Manual = %d", light_period);
-            vTaskDelay(1000 / portTICK_PERIOD_MS);
+
+            vTaskDelay(MANUAL_LIGHT_REFRESH);
         }
     }
 }
@@ -165,28 +224,6 @@ unsigned int *get_light_period(void)
     return &light_period;
 }
 
-// void task_light_control(void *p)
-// {
-//     static bool *zero_crossing;
-//     zero_crossing = get_flag_zero_cossed();
-//     static unsigned int period = 0;
-//
-//     while(1)
-//     {
-//         if (*zero_crossing == true)
-//         {
-//             ESP_LOGI(TAG_TASK, "ZERO CROSSING");
-//             if (xSemaphoreTake(xMutex_Light_period, 10) == pdTRUE)
-//             {
-//                 period = light_period;
-//                 xSemaphoreGive(xMutex_Light_period);
-//             }
-//             light_toggle(period);
-//             *zero_crossing = false;
-//         }
-//         vTaskDelay(1);
-//     }
-// }
 
 void task_channel_sniffer(void *p)
 {

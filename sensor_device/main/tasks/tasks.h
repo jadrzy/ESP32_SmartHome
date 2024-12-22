@@ -19,7 +19,8 @@
 #define PRESSURE_SENSOR_MEASUREMENT_TIME  (5 / portTICK_PERIOD_MS)    // 5ms for pressure sensor (+45ms in measurement)
 #define SNIFFER_TASK_PERIOD               (50 / portTICK_PERIOD_MS)
 #define RESET_PEER_TIME                   (60 * 1000)                 // 1min 
-#define WIFI_MAX_CHANNEL 13
+#define WIFI_MAX_CHANNEL                  13
+#define MANUAL_LIGHT_REFRESH              (1000 / portTICK_PERIOD_MS)
 
 // Structure to hold task handles for FreeRTOS tasks
 struct task_handles {
