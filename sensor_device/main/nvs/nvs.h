@@ -10,12 +10,10 @@
 #include "esp_mac.h"
 #include "nvs_flash.h"
 
-// Constants
 #define SERIAL_NUMBER_SIZE 13
 #define NUMBER_OF_DEVICES 10
 
-// Function declarations
 esp_err_t init_nvs_partitions(void);
 esp_err_t get_slave_serial_number_from_nvs(char *number);
 
-#endif // PARTITIONS_HEADER
+#endif
