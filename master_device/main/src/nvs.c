@@ -38,6 +38,55 @@ esp_err_t init_nvs_partitions(void)
     return ret;
 }
 
+
+esp_err_t get_http_cred_from_nvs(char *url, char *api_key)
+{
+    esp_err_t err = ESP_OK;
+    nvs_handle_t my_handle;
+
+    // Open NVS handle
+    err = nvs_open_from_partition("data", "HTTP", NVS_READONLY, &my_handle);
+    if (err != ESP_OK) {
+        ESP_LOGE(TAG_NVS, "Error (%s) opening NVS handle!\n", esp_err_to_name(err));
+        return err;
+    }
+
+    // Get required size for url
+    size_t required_size = 0; 
+    err = nvs_get_str(my_handle, "url", NULL, &required_size);
+    ESP_ERROR_CHECK(err);
+
+    // Read the url
+    char string[64];
+    err = nvs_get_str(my_handle, "url", string, &required_size);
+    ESP_ERROR_CHECK(err);
+
+    // Remove the newline character if present
+    string[strcspn(string, "\n")] = '\0';
+
+    if (err == ESP_OK) {
+        strcpy(url, string);
+    }
+
+    // Get required size for api_key
+    required_size = 0; 
+    err = nvs_get_str(my_handle, "API_KEY", NULL, &required_size);
+    ESP_ERROR_CHECK(err);
+
+    // Read the url
+    char api[148];
+    err = nvs_get_str(my_handle, "API_KEY", api, &required_size);
+    ESP_ERROR_CHECK(err);
+
+    if (err == ESP_OK) {
+        strcpy(api_key, api);
+    }
+ 
+    nvs_close(my_handle);
+    return err;
+}
+
+
 esp_err_t get_master_serial_number_from_nvs(char *number)
 {
     esp_err_t err = ESP_OK;
