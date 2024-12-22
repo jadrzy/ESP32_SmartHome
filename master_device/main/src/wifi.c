@@ -484,7 +484,7 @@ esp_err_t my_esp_now_init(void)
 }
 
 
-// HTTPS
+// HTTP
 #define MAX_HTTP_OUTPUT_BUFFER 2048
 
 esp_err_t http_event_handler(esp_http_client_event_t *evt)
@@ -500,7 +500,6 @@ esp_err_t http_event_handler(esp_http_client_event_t *evt)
         case HTTP_EVENT_HEADER_SENT:
             break;
         case HTTP_EVENT_ON_HEADER:
-            // ESP_LOGI(TAG_WIFI, "HTTP_EVENT_ON_HEADER, key=%s, value=%s", evt->header_key, evt->header_value);
             break;
         case HTTP_EVENT_ON_DATA:
             // Clean the buffer in case of a new request
@@ -513,7 +512,6 @@ esp_err_t http_event_handler(esp_http_client_event_t *evt)
                 int copy_len = 0;
 
                 if (evt->user_data) {
-                    // The last byte in evt->user_data is kept for the NULL character in case of out-of-bound access.
                     evt->data_len < (MAX_HTTP_OUTPUT_BUFFER - output_len) ? copy_len = evt->data_len : (MAX_HTTP_OUTPUT_BUFFER - output_len);
                     if (copy_len) {
                         memcpy(evt->user_data + output_len, evt->data, copy_len);
@@ -521,7 +519,6 @@ esp_err_t http_event_handler(esp_http_client_event_t *evt)
                 } else {
                     int content_len = esp_http_client_get_content_length(evt->client);
                     if (output_buffer == NULL) {
-                        // We initialize output_buffer with 0 because it is used by strlen() and similar functions therefore should be null terminated.
                         output_buffer = (char *) calloc(content_len + 1, sizeof(char));
                         output_len = 0;
                         if (output_buffer == NULL) {
@@ -540,7 +537,6 @@ esp_err_t http_event_handler(esp_http_client_event_t *evt)
             break;
         case HTTP_EVENT_ON_FINISH:
             if (output_buffer != NULL) {
-                // Response is accumulated in output_buffer. Uncomment the below line to print the accumulated response
                 free(output_buffer);
                 output_buffer = NULL;
             }
@@ -603,7 +599,6 @@ static int decode_json_and_save(const char *strJSON)
         }
     }
 
-
 end:
     cJSON_Delete(str);
     return status;
@@ -627,7 +622,9 @@ esp_err_t send_data_to_db(char *string_JSON)
 
 // POST
     esp_http_client_set_url(client, "http://192.168.0.210:5000/data");
+    esp_http_client_set_authtype(client, HTTP_AUTH_TYPE_BASIC);
     esp_http_client_set_post_field(client, string_JSON, strlen(string_JSON));
+    esp_http_client_set_header(client, "Authorization", "Bearer 12345");
     esp_http_client_set_header(client, "Content-Type", "application/json");
 
     esp_http_client_set_method(client, HTTP_METHOD_POST);
