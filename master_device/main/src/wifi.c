@@ -39,6 +39,8 @@ static TimerHandle_t setup_timer = NULL;
 static esp_netif_t *esp_netif_ap;
 static esp_netif_t *esp_netif_sta;
 
+static char url[64];
+static char api_key[148];
 
 static wifi_config_t wifi_sta_config = {
     .sta = {
@@ -605,6 +607,13 @@ end:
 }
 
 
+void set_http_cred(char *url_new, char *api_key_new)
+{
+    strcpy(url, url_new);
+    strcpy(api_key, api_key_new);
+}
+
+            
 esp_err_t send_data_to_db(char *string_JSON)
 {
     char local_response_buffer[MAX_HTTP_OUTPUT_BUFFER + 1] = {0};
