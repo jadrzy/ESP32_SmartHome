@@ -22,6 +22,12 @@
 #define WIFI_MAX_CHANNEL                  13
 #define MANUAL_LIGHT_REFRESH              (1000 / portTICK_PERIOD_MS)
 
+#define FUZZY_BIG       30
+#define FUZZY_MEDIUM    20
+#define FUZZY_SMALLx1   10
+#define FUZZY_SMALLx2   5
+#define FUZZY_SMALLx3   3
+
 // Structure to hold task handles for FreeRTOS tasks
 struct task_handles {
     TaskHandle_t lux_task;        // Task handle for light sensor
