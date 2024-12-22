@@ -651,3 +651,217 @@ esp_err_t send_data_to_db(char *string_JSON)
 
     return err;
 }
+
+
+
+
+esp_err_t serve_html(httpd_req_t *req) {
+
+    if (err != ESP_OK) {
+        ESP_LOGE("HTTP", "Failed to read NVS data");
+        httpd_resp_send_404(req); // Zwróć błąd 404, jeśli odczyt nie powiedzie się
+        return ESP_FAIL;
+    }
+    
+    char html_content[6144];
+    const char* html_content = 
+        "<!DOCTYPE html>"
+        "<html>"
+        "<head>"
+        "<title>ESP Config</title>"
+        "<style>"
+        "body {"
+        "    font-family: 'Arial', sans-serif;"
+        "    text-align: center;"
+        "    margin: 20px;"
+        "    background: linear-gradient(to bottom, #f0f8ff, #e6e6fa);"
+        "    color: #333;"
+        "}"
+        "h1 {"
+        "    font-size: 36px;"
+        "    color: #1e4e8c;"
+        "    text-shadow: 3px 3px 5px rgba(0, 0, 0, 0.3);"
+        "    font-weight: bold;"
+        "    margin-bottom: 30px;"
+        "}"
+        "h2 {"
+        "    font-size: 22px;"
+        "    color: #1e4e8c;"
+        "    margin-bottom: 10px;"
+        "    text-shadow: 1px 1px 1px #ddd;"
+        "}"
+        "form {"
+        "    margin: 20px auto;"
+        "    width: 600px;"
+        "    text-align: left;"
+        "    background: #ffffff;"
+        "    padding: 20px;"
+        "    border-radius: 10px;"
+        "    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);"
+        "}"
+        "input {"
+        "    margin-bottom: 10px;"
+        "    width: calc(100% - 16px);"
+        "    padding: 8px;"
+        "    border: 1px solid #ccc;"
+        "    border-radius: 5px;"
+        "    box-sizing: border-box;"
+        "    font-size: 14px;"
+        "}"
+        "button {"
+        "    padding: 12px 25px;"
+        "    background-color: #1e4e8c;"
+        "    color: white;"
+        "    border: none;"
+        "    border-radius: 5px;"
+        "    cursor: pointer;"
+        "    font-size: 16px;"
+        "    transition: background-color 0.3s ease, transform 0.2s ease;"
+        "    margin-top: 30px;"
+        "    width: 100%;"
+        "}"
+        "button:hover {"
+        "    background-color: #165d8d;"
+        "    transform: scale(1.05);"
+        "}"
+        ".device-section {"
+        "    display: grid;"
+        "    grid-template-columns: repeat(2, 1fr);"
+        "    gap: 20px;"
+        "}"
+        ".device-group {"
+        "    border: 1px solid #ddd;"
+        "    padding: 15px;"
+        "    border-radius: 10px;"
+        "    background: #f9f9f9;"
+        "    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);"
+        "}"
+        ".device-group h3 {"
+        "    margin: 0 0 10px 0;"
+        "    font-size: 18px;"
+        "    color: #1e4e8c;"
+        "    text-align: center;"
+        "}"
+        "footer {"
+        "    margin-top: 20px;"
+        "    font-size: 12px;"
+        "    color: #666;"
+        "}"
+        "</style>"
+        "</head>"
+        "<body>"
+        "    <h1>Master Device Configuration</h1>"
+        "    <form action='/submit' method='POST'>"
+        "        <h2>WiFi Settings</h2>"
+        "        SSID:<br>"
+        "        <input type='text' name='ssid' required><br>"
+        "        Password:<br>"
+        "        <input type='password' name='password' required><br>"
+        "        <h2>Devices</h2>"
+        "        <div class='device-section'>"
+        "            <div class='device-group'>"
+        "                <h3>Device 1</h3>"
+        "                Serial Number:<br>"
+        "                <input type='text' name='serial1'><br>"
+        "                MAC Address:<br>"
+        "                <input type='text' name='mac1'><br>"
+        "            </div>"
+        "            <div class='device-group'>"
+        "                <h3>Device 2</h3>"
+        "                Serial Number:<br>"
+        "                <input type='text' name='serial2'><br>"
+        "                MAC Address:<br>"
+        "                <input type='text' name='mac2'><br>"
+        "            </div>"
+        "            <div class='device-group'>"
+        "                <h3>Device 3</h3>"
+        "                Serial Number:<br>"
+        "                <input type='text' name='serial3'><br>"
+        "                MAC Address:<br>"
+        "                <input type='text' name='mac3'><br>"
+        "            </div>"
+        "            <div class='device-group'>"
+        "                <h3>Device 4</h3>"
+        "                Serial Number:<br>"
+        "                <input type='text' name='serial4'><br>"
+        "                MAC Address:<br>"
+        "                <input type='text' name='mac4'><br>"
+        "            </div>"
+        "            <div class='device-group'>"
+        "                <h3>Device 5</h3>"
+        "                Serial Number:<br>"
+        "                <input type='text' name='serial5'><br>"
+        "                MAC Address:<br>"
+        "                <input type='text' name='mac5'><br>"
+        "            </div>"
+        "            <div class='device-group'>"
+        "                <h3>Device 6</h3>"
+        "                Serial Number:<br>"
+        "                <input type='text' name='serial6'><br>"
+        "                MAC Address:<br>"
+        "                <input type='text' name='mac6'><br>"
+        "            </div>"
+        "            <div class='device-group'>"
+        "                <h3>Device 7</h3>"
+        "                Serial Number:<br>"
+        "                <input type='text' name='serial7'><br>"
+        "                MAC Address:<br>"
+        "                <input type='text' name='mac7'><br>"
+        "            </div>"
+        "            <div class='device-group'>"
+        "                <h3>Device 8</h3>"
+        "                Serial Number:<br>"
+        "                <input type='text' name='serial8'><br>"
+        "                MAC Address:<br>"
+        "                <input type='text' name='mac8'><br>"
+        "            </div>"
+        "            <div class='device-group'>"
+        "                <h3>Device 9</h3>"
+        "                Serial Number:<br>"
+        "                <input type='text' name='serial9'><br>"
+        "                MAC Address:<br>"
+        "                <input type='text' name='mac9'><br>"
+        "            </div>"
+        "            <div class='device-group'>"
+        "                <h3>Device 10</h3>"
+        "                Serial Number:<br>"
+        "                <input type='text' name='serial10'><br>"
+        "                MAC Address:<br>"
+        "                <input type='text' name='mac10'><br>"
+        "            </div>"
+        "        </div>"
+        "        <button type='submit'>Submit</button>"
+        "    </form>"
+        "    <footer>"
+        "        &copy; 2024 ESP Configurator. All rights reserved."
+        "    </footer>"
+        "</body>"
+        "</html>";
+    
+    httpd_resp_send(req, html_content, HTTPD_RESP_USE_STRLEN);
+    return err;
+}
+
+static httpd_uri_t html_uri = {
+    .uri = "/",
+    .method = HTTP_GET,
+    .handler = serve_html,
+    .user_ctx = NULL
+};
+
+static httpd_uri_t form_uri = {
+    .uri = "/submit",
+    .method = HTTP_POST,
+    .handler = handle_form_submission,
+    .user_ctx = NULL
+};
+
+void start_webserver(void) {
+    httpd_handle_t server = NULL;
+    httpd_config_t config = HTTPD_DEFAULT_CONFIG();
+    ESP_ERROR_CHECK(httpd_start(&server, &config));
+
+    // Rejestracja handlerów
+    ESP_ERROR_CHECK(httpd_register_uri_handler(server, &html_uri));
+    //ESP_ERROR_CHECK(httpd_register_uri_handler(server, &form_uri));
+}
