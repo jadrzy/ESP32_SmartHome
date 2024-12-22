@@ -25,6 +25,15 @@ esp_err_t memory_setup(void)
 
     set_master_device(serial, mac);
 
+    char url[48];
+    char api_key[148];
+    ESP_ERROR_CHECK(err = get_http_cred_form_nvs(url, api_key));
+    if (err == ESP_OK){
+        ESP_LOGI(TAG_BODY, "HTTP credentials extracted...");
+    }   
+    
+    set_http_cred(url, api);
+    
     memory_update();
 
     return err;
