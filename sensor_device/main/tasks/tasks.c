@@ -1,18 +1,4 @@
 #include "tasks.h"
-#include "esp_err.h"
-#include "esp_log.h"
-#include "esp_wifi.h"
-#include "esp_wifi_types_generic.h"
-#include "freertos/idf_additions.h"
-#include "freertos/projdefs.h"
-#include "tasks/drivers/led/led.h"
-#include "tasks/wifi/wifi.h"
-#include "tasks/data/data.h"
-#include <stdint.h>
-#include "drivers/light_control/light_control.h"
-
-
-
 
 static const char TAG_TASK[] = "TASK";
 
@@ -329,7 +315,6 @@ static esp_err_t prepare_send_data(send_data_t *data)
 }
 
 
-
 static QueueHandle_t recieve_data_queue;
 
 QueueHandle_t get_queue_handle(void)
@@ -429,7 +414,6 @@ void initialize_tasks(void)
     xTaskCreatePinnedToCore(task_fun_get_pressure_value, "Get_Pressure_Task", 6144, NULL, 5, &task_handles.press_task, 1);
     xTaskCreatePinnedToCore(recv_queue_task, "Handle_rec_data", 6144, NULL, 6, &task_handles.recieve_data_task, 1);
     xTaskCreatePinnedToCore(task_channel_sniffer, "Toggle wifi channel", 4096, NULL, 4, &task_handles.channel_sniffer_task, 1);
-    // xTaskCreatePinnedToCore(task_light_control, "Light control task", 4096, NULL, 10, &task_handles.light_control_task, 1);
     xTaskCreatePinnedToCore(task_adjust_light_control_period, "Light period adjust task", 4096, NULL, 5, &task_handles.light_period_adjust_task, 1);
 
     channel_sniffer_timer = xTimerCreate(
