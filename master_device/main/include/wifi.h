@@ -52,7 +52,6 @@ typedef struct {
     unsigned int time_synchronized : 1;
 
     unsigned int setup_mode : 1;
-    unsigned int reboot : 1;
 } wifi_flags_t;
 
 typedef struct {
@@ -82,7 +81,6 @@ esp_err_t start_setup_mode(void);
 esp_err_t stop_setup_mode(void);
 esp_err_t send_data_to_db(char *string_JSON);
 void start_webserver(void);
-void wifi_reboot(void);
 
 
 #endif

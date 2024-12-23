@@ -98,13 +98,6 @@ void wifi_reboot_and_led_toggle_task(void *p)
 
     while(1)
     {
-        // REBOOT CONTROL
-        if (flags->reboot == 1)     
-        {
-            wifi_reboot();
-            flags->reboot = 0;
-        }
-
         // LED CONTROL
         if (flags->setup_mode)
         {
@@ -246,7 +239,7 @@ void wifi_send_to_db_task(void *p)
     
     while(1)
     {
-        if (flags->got_ip && flags->time_synchronized && !flags->setup_mode)
+        if (flags->got_ip && flags->time_synchronized)
         {
             get_slave_devices(devices);
             set_old_data();
