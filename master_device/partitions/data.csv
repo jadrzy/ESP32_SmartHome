@@ -24,8 +24,8 @@ mac_08,data,u64,0
 mac_09,data,u64,0 
 mac_10,data,u64,0
 WIFI_SM,namespace,,
-SSID,data,string,pxs.pl_5537
-PSSWD,data,string,RmT8rvMitaQKtFL
+SSID,data,string,giga34
+PSSWD,data,string,net556086
 HTTP,namespace,,
 url,data,string,http://192.168.0.210:5000/data
 API_KEY,data,string,Bearer ylCSvZa4tMUldtaXBBL4XLdqCJyxkyNLqSxGyDHQc5bHagPleBjyIy77CiMW1t7jVXApQSbLZ29TLPBBx952LuyW0RmwiN7yj71N2NR5N6iciPhf82riSsl7lk6K8izi

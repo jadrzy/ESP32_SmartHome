@@ -17,6 +17,8 @@
 #include "include/nvs.h"
 #include "include/task.h"
 #include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include "esp_http_client.h"
 #include "esp_tls.h"
@@ -96,8 +98,9 @@ static void wifi_event_handler(void *arg, esp_event_base_t event_base,
         wifi_event_ap_staconnected_t *event = (wifi_event_ap_staconnected_t *) event_data;
         ESP_LOGI(TAG_WIFI, "Station "MACSTR" joined, AID=%d",
                  MAC2STR(event->mac), event->aid);
-        if (flags.setup_mode)
+        if (!flags.setup_mode)
         {
+            ESP_LOGI(TAG_WIFI, "Connection request. Setup mode is off. Disconnecting...");
             esp_wifi_deauth_sta(0);
         }
         flags.ap_connected = 1; 
@@ -635,14 +638,48 @@ esp_err_t send_data_to_db(char *string_JSON)
 
 esp_err_t serve_html(httpd_req_t *req) {
 
+    ESP_LOGI(TAG_WIFI, "Http server request");
     esp_err_t err = ESP_OK;
     if (err != ESP_OK) {
         ESP_LOGE("HTTP", "Data");
         httpd_resp_send_404(req); // Zwróć błąd 404, jeśli odczyt nie powiedzie się
         return ESP_FAIL;
     }
+
+    // Extracion
+    char ssid[32] = "";
+    char psswd[64] = "";
+    ESP_ERROR_CHECK(get_wifi_sm_cred_from_nvs(ssid, psswd));
+
     
-    const char* html_content = 
+    char serial_numbers[NUMBER_OF_DEVICES][SERIAL_NUMBER_SIZE];
+    uint64_t mac_addresses[NUMBER_OF_DEVICES];
+
+    err = get_paired_devices_from_nvs(mac_addresses, serial_numbers);
+    if (err != ESP_OK){
+        ESP_LOGI(TAG_WIFI, "Error extracting paired devices from nvs...");
+    }
+
+    char mac_addresses_str[NUMBER_OF_DEVICES][20];
+    for (int i = 0; i < NUMBER_OF_DEVICES; i++)
+    {
+        if (mac_addresses[i] == 0)
+            mac_addresses_str[i][0] = '\0';
+        else
+            sprintf(mac_addresses_str[i], "%"PRIu64, mac_addresses[i]);
+    }
+
+
+    static char *html_content; 
+    if (html_content == NULL)
+        html_content = malloc(6144* sizeof(char));
+    else
+        *html_content = '\0';
+
+    char buffer[1024];
+
+    *html_content = '\0';
+    snprintf(buffer,sizeof(buffer),
         "<!DOCTYPE html>"
         "<html>"
         "<head>"
@@ -679,7 +716,7 @@ esp_err_t serve_html(httpd_req_t *req) {
         "}"
         "input {"
         "    margin-bottom: 10px;"
-        "    width: calc(100% - 16px);"
+        "    width: calc(100%% - 16px);"
         "    padding: 8px;"
         "    border: 1px solid #ccc;"
         "    border-radius: 5px;"
@@ -692,11 +729,14 @@ esp_err_t serve_html(httpd_req_t *req) {
         "    color: white;"
         "    border: none;"
         "    border-radius: 5px;"
-        "    cursor: pointer;"
+        "    cursor: pointer;");
+
+    strcat(html_content, buffer);
+    snprintf(buffer,sizeof(buffer),
         "    font-size: 16px;"
         "    transition: background-color 0.3s ease, transform 0.2s ease;"
         "    margin-top: 30px;"
-        "    width: 100%;"
+        "    width: 100%%;"
         "}"
         "button:hover {"
         "    background-color: #165d8d;"
@@ -732,80 +772,102 @@ esp_err_t serve_html(httpd_req_t *req) {
         "    <form action='/submit' method='POST'>"
         "        <h2>WiFi Settings</h2>"
         "        SSID:<br>"
-        "        <input type='text' name='ssid' required><br>"
+        "        <input type='text' name='ssid' value='%s' required><br>"
         "        Password:<br>"
-        "        <input type='password' name='password' required><br>"
+        "        <input type='password' name='password' value='%s' required><br>", ssid, psswd);
+
+    strcat(html_content, buffer);
+    snprintf(buffer,sizeof(buffer),
         "        <h2>Devices</h2>"
         "        <div class='device-section'>"
         "            <div class='device-group'>"
         "                <h3>Device 1</h3>"
         "                Serial Number:<br>"
-        "                <input type='text' name='serial1'><br>"
-        "                MAC Address:<br>"
-        "                <input type='text' name='mac1'><br>"
+        "                <input type='text' name='serial1' value='%s'><br>"
+        "                Password:<br>"
+        "                <input type='text' name='mac1' value='%s'><br>"
         "            </div>"
         "            <div class='device-group'>"
         "                <h3>Device 2</h3>"
         "                Serial Number:<br>"
-        "                <input type='text' name='serial2'><br>"
-        "                MAC Address:<br>"
-        "                <input type='text' name='mac2'><br>"
+        "                <input type='text' name='serial2' value='%s'><br>"
+        "                Password:<br>"
+        "                <input type='text' name='mac2' value='%s'><br>"
         "            </div>"
         "            <div class='device-group'>"
         "                <h3>Device 3</h3>"
         "                Serial Number:<br>"
-        "                <input type='text' name='serial3'><br>"
-        "                MAC Address:<br>"
-        "                <input type='text' name='mac3'><br>"
-        "            </div>"
+        "                <input type='text' name='serial3' value='%s'><br>"
+        "                Password:<br>"
+        "                <input type='text' name='mac3' value='%s'><br>"
+        "            </div>",
+             serial_numbers[0], mac_addresses_str[0], 
+             serial_numbers[1], mac_addresses_str[1], 
+             serial_numbers[2], mac_addresses_str[2]);
+
+    strcat(html_content, buffer);
+    snprintf(buffer,sizeof(buffer),
         "            <div class='device-group'>"
-        "                <h3>Device 4</h3>"
+        "                <h3>Device 4</h3>" 
         "                Serial Number:<br>"
-        "                <input type='text' name='serial4'><br>"
-        "                MAC Address:<br>"
-        "                <input type='text' name='mac4'><br>"
+        "                <input type='text' name='serial4' value='%s'><br>"
+        "                Password:<br>"
+        "                <input type='text' name='mac4' value='%s'><br>"
         "            </div>"
         "            <div class='device-group'>"
         "                <h3>Device 5</h3>"
         "                Serial Number:<br>"
-        "                <input type='text' name='serial5'><br>"
-        "                MAC Address:<br>"
-        "                <input type='text' name='mac5'><br>"
+        "                <input type='text' name='serial5' value='%s'><br>"
+        "                Password:<br>"
+        "                <input type='text' name='mac5' value='%s'><br>"
         "            </div>"
         "            <div class='device-group'>"
         "                <h3>Device 6</h3>"
         "                Serial Number:<br>"
-        "                <input type='text' name='serial6'><br>"
-        "                MAC Address:<br>"
-        "                <input type='text' name='mac6'><br>"
-        "            </div>"
+        "                <input type='text' name='serial6' value='%s'><br>"
+        "                Password:<br>"
+        "                <input type='text' name='mac6' value='%s'><br>"
+        "            </div>",
+             serial_numbers[3], mac_addresses_str[3], 
+             serial_numbers[4], mac_addresses_str[4], 
+             serial_numbers[5], mac_addresses_str[5]);
+
+    strcat(html_content, buffer);
+    snprintf(buffer,sizeof(buffer),
         "            <div class='device-group'>"
         "                <h3>Device 7</h3>"
         "                Serial Number:<br>"
-        "                <input type='text' name='serial7'><br>"
-        "                MAC Address:<br>"
-        "                <input type='text' name='mac7'><br>"
+        "                <input type='text' name='serial7' value='%s'><br>"
+        "                Password:<br>"
+        "                <input type='text' name='mac7' value='%s'><br>"
         "            </div>"
         "            <div class='device-group'>"
         "                <h3>Device 8</h3>"
         "                Serial Number:<br>"
-        "                <input type='text' name='serial8'><br>"
-        "                MAC Address:<br>"
-        "                <input type='text' name='mac8'><br>"
+        "                <input type='text' name='serial8' value='%s'><br>"
+        "                Password:<br>"
+        "                <input type='text' name='mac8' value='%s'><br>"
         "            </div>"
         "            <div class='device-group'>"
         "                <h3>Device 9</h3>"
         "                Serial Number:<br>"
-        "                <input type='text' name='serial9'><br>"
-        "                MAC Address:<br>"
-        "                <input type='text' name='mac9'><br>"
-        "            </div>"
+        "                <input type='text' name='serial9' value='%s'><br>"
+        "                Password:<br>"
+        "                <input type='text' name='mac9' value='%s'><br>"
+        "            </div>",
+             serial_numbers[6], mac_addresses_str[6],
+             serial_numbers[7], mac_addresses_str[7], 
+             serial_numbers[8], mac_addresses_str[8]);
+
+
+    strcat(html_content, buffer);
+    snprintf(buffer,sizeof(buffer),
         "            <div class='device-group'>"
         "                <h3>Device 10</h3>"
         "                Serial Number:<br>"
-        "                <input type='text' name='serial10'><br>"
-        "                MAC Address:<br>"
-        "                <input type='text' name='mac10'><br>"
+        "                <input type='text' name='serial10' value='%s'><br>"
+        "                Password:<br>"
+        "                <input type='text' name='mac10' value='%s'><br>"
         "            </div>"
         "        </div>"
         "        <button type='submit'>Submit</button>"
@@ -814,11 +876,78 @@ esp_err_t serve_html(httpd_req_t *req) {
         "        &copy; 2024 ESP Configurator. All rights reserved."
         "    </footer>"
         "</body>"
-        "</html>";
+        "</html>",
+             serial_numbers[9], mac_addresses_str[9]);
+
+    strcat(html_content, buffer);
     
     httpd_resp_send(req, html_content, HTTPD_RESP_USE_STRLEN);
+    free(html_content);
+    html_content = NULL;
     return err;
 }
+
+
+esp_err_t recieve_html(httpd_req_t *req) {
+
+    esp_err_t err = ESP_OK;
+    static char *html_content; 
+    if (html_content == NULL)
+        html_content = malloc(6144* sizeof(char));
+    else
+        *html_content = '\0';
+
+    *html_content = '\0';
+
+    char buffer[1024];
+
+    ESP_LOGI(TAG_WIFI, "Http server request");
+
+    while (1)
+    {
+        int ret = httpd_req_recv(req, buffer, sizeof(buffer));
+        if (ret <=  0)
+        {
+            break;
+        }
+        else
+        {
+            strcat(html_content, buffer);
+        }
+
+        if (err != ESP_OK) {
+            ESP_LOGE("HTTP", "Submit");
+            httpd_resp_send_404(req); // Zwróć błąd 404, jeśli odczyt nie powiedzie się
+            return ESP_FAIL;
+        }
+    }
+
+    // Parser
+    char ssid[32] = "";
+    char psswd[64] = "";
+
+    strhtml_content 
+    
+    
+    char serial_numbers[NUMBER_OF_DEVICES][SERIAL_NUMBER_SIZE];
+    uint64_t mac_addresses[NUMBER_OF_DEVICES];
+
+
+
+    write_wifi_sm_cred_to_nvs(char *SSID, char *PSSWD)
+    write_paired_devices_to_nvs(uint64_t *mac_device_list, char (*serial_device_list)[13])
+
+
+    ESP_LOGI(TAG_WIFI, "%s", html_content);
+
+
+    free(html_content);
+    html_content = NULL;
+    return err;
+}
+
+
+
 
 static httpd_uri_t html_uri = {
     .uri = "/",
@@ -827,12 +956,12 @@ static httpd_uri_t html_uri = {
     .user_ctx = NULL
 };
 
-// static httpd_uri_t form_uri = {
-//     .uri = "/submit",
-//     .method = HTTP_POST,
-//     .handler = handle_form_submission,
-//     .user_ctx = NULL
-// };
+static httpd_uri_t form_uri = {
+    .uri = "/submit",
+    .method = HTTP_POST,
+    .handler = recieve_html,
+    .user_ctx = NULL
+};
 
 void start_webserver(void) {
     httpd_handle_t server = NULL;
@@ -841,6 +970,6 @@ void start_webserver(void) {
 
     // Rejestracja handlerów
     ESP_ERROR_CHECK(httpd_register_uri_handler(server, &html_uri));
-    //ESP_ERROR_CHECK(httpd_register_uri_handler(server, &form_uri));
+    ESP_ERROR_CHECK(httpd_register_uri_handler(server, &form_uri));
 }
 
