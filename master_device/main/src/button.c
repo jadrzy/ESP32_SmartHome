@@ -75,6 +75,7 @@ void debouncer_callback_timer(TimerHandle_t xTimer)
 
 void button_press_callback_timer(TimerHandle_t xTimer)
 {
+    gpio_set_level(GPIO_NUM_16, 0);
     press_timer_running = false;
     start_setup_mode();
 }

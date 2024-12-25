@@ -16,7 +16,6 @@
 #include "include/data.h"
 #include "include/nvs.h"
 #include "include/task.h"
-#include <ctype.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -888,30 +887,6 @@ esp_err_t serve_html(httpd_req_t *req) {
     return err;
 }
 
-static char *cutter(char *string)
-{
-    char *ptr_cut;
-    static char output[64];
-    ptr_cut = strchr(string, '=');
-    ptr_cut++;
-    if (ptr_cut != NULL)
-        strncpy(output, ptr_cut, 64);
-    else
-        strncpy(output, "", 1);
-
-    int i = 0;
-    while(output[i] != '\0')
-    {
-        if (!isalnum( (unsigned int) output[i] ) )
-        {
-            output[i] = '\0';
-            break;
-        }
-        i++;
-    }
-
-    return output;
-}
 
 esp_err_t recieve_html(httpd_req_t *req) {
 
@@ -919,11 +894,14 @@ esp_err_t recieve_html(httpd_req_t *req) {
     static char *html_content; 
     if (html_content == NULL)
         html_content = malloc(6144* sizeof(char));
+    else
+        *html_content = '\0';
 
+    *html_content = '\0';
 
     char buffer[1024];
 
-    ESP_LOGI(TAG_WIFI, "Http server return");
+    ESP_LOGI(TAG_WIFI, "Http server request");
 
     while (1)
     {
@@ -939,112 +917,58 @@ esp_err_t recieve_html(httpd_req_t *req) {
 
         if (err != ESP_OK) {
             ESP_LOGE("HTTP", "Submit");
-            httpd_resp_send_404(req); // return 404 in case of error
+            httpd_resp_send_404(req); // Zwróć błąd 404, jeśli odczyt nie powiedzie się
             return ESP_FAIL;
         }
     }
 
     // Parser
-    static char (*data_parsed)[96]; 
-    if (data_parsed == NULL)
-        data_parsed = malloc(((NUMBER_OF_DEVICES * 2) + 2) * sizeof(char) * 96);
+    char data_parsed[NUMBER_OF_DEVICES + 2][64];
 
     char *token;
     if ((token = strtok(html_content, "&")) != NULL)
     {
         int i = 0;
-        strncpy(*(data_parsed + i), token, 96);
-
+        strcpy(data_parsed[i], token);
         while ((token = strtok(NULL, "&")) != NULL)
         {
             i++;
-            strncpy(*(data_parsed + i), token, 96);
-            if (i == ((NUMBER_OF_DEVICES * 2) + 2 - 1))
-            {
-                if( strstr(token, "<") != NULL)
-                {
-                    token = strtok(token, "<");
-                    strncpy(*(data_parsed + i), token, 96);
-                    break;
-                }
-            }
+            ESP_LOGI(TAG_WIFI, "CONTROL i=%d", i);
+            strcpy(data_parsed[i], token);
+        }
+        if( strstr(token, "<") != NULL)
+        {
+            token = strtok(token, "<");
+            strcpy(data_parsed[i], token);
         }
     }
     
+
+    for (int i = 0; i < (NUMBER_OF_DEVICES + 2); i++)
+    {
+        ESP_LOGI(TAG_WIFI, "%s", data_parsed[i]);
+    }
+
 
     char ssid[32] = "";
     char psswd[64] = "";
     char serial_numbers[NUMBER_OF_DEVICES][SERIAL_NUMBER_SIZE];
-    uint64_t mac_addresses[NUMBER_OF_DEVICES] = {0};
-    char placeholder[64];
-
-    // ssid
-    strncpy(ssid, cutter( *(data_parsed + 0)), sizeof(ssid));
+    uint64_t mac_addresses[NUMBER_OF_DEVICES];
 
 
-    // psswd
-    strncpy(psswd, cutter( *(data_parsed + 1)), sizeof(psswd));
 
-    
-    // serials and macs
-    for (int i = 0; i < NUMBER_OF_DEVICES; i++)
-    {
-        strncpy(serial_numbers[i], cutter( *(data_parsed + 2 + (i * 2))), sizeof(serial_numbers[i]));
-        strncpy(placeholder, cutter( *(data_parsed + 2 + (i * 2) + 1)), 64);
-
-        int j = 0;
-        bool correct_mac = true;
-
-        while(*(placeholder + j) != '\0')
-        {
-            if (!isdigit( (unsigned int) *(placeholder + j) ) )
-            {
-                correct_mac = false;
-                break;
-            }
-            j++;
-        }
-        if (correct_mac == true && *(placeholder) != '\0')
-        {
-            mac_addresses[i] = strtoull(placeholder, NULL, 0);
-        }
-    }
-
-    // final validation
-    for (int i = 0; i < NUMBER_OF_DEVICES; i++)
-    {
-        bool serial_validated = false;
-        bool mac_validated = false;
-
-        if (strlen(serial_numbers[i]) == 12)
-        {
-            serial_validated = true;
-        }
-
-        char string[24];
-        sprintf(string, "%"PRIx64, mac_addresses[i]);
-        if (strlen(string) == 12)
-            mac_validated = true;
-
-        if (!serial_validated || !mac_validated)
-        {
-            strcpy(serial_numbers[i], "");
-            mac_addresses[i] = 0;
-        }
-    }
+    // write_wifi_sm_cred_to_nvs(char *SSID, char *PSSWD)
+    // write_paired_devices_to_nvs(uint64_t *mac_device_list, char (*serial_device_list)[13])
 
 
-    // writing to nvs
-    write_wifi_sm_cred_to_nvs(ssid, psswd);
-    write_paired_devices_to_nvs(mac_addresses, serial_numbers);
 
 
-    free(data_parsed);
-    data_parsed = NULL;
     free(html_content);
     html_content = NULL;
     return err;
 }
+
+
 
 
 static httpd_uri_t html_uri = {
