@@ -1046,8 +1046,47 @@ esp_err_t recieve_html(httpd_req_t *req) {
 
 
     // response
+    const char* response = 
+    "<!DOCTYPE html>"
+    "<html>"
+    "<head>"
+    "<title>Configuration Saved</title>"
+    "<style>"
+    "body {"
+    "    font-family: 'Arial', sans-serif;"
+    "    text-align: center;"
+    "    margin: 20px;"
+    "    background: linear-gradient(to bottom, #f0fff0, #d0f0d0);"
+    "    color: #333;"
+    "}"
+    "h1 {"
+    "    font-size: 36px;"
+    "    color: #2e8b57;"
+    "    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);"
+    "    font-weight: bold;"
+    "    margin-bottom: 20px;"
+    "}"
+    "p {"
+    "    font-size: 18px;"
+    "    color: #333;"
+    "    margin-bottom: 20px;"
+    "}"
+    "footer {"
+    "    margin-top: 20px;"
+    "    font-size: 12px;"
+    "    color: #666;"
+    "}"
+    "</style>"
+    "</head>"
+    "<body>"
+    "    <h1>Data Saved Successfully!</h1>"
+    "    <p>New devices will appear in the application if credentials were inserted correctly.</p>"
+    "    <footer>"
+    "        &copy; 2024 ESP Configurator. All rights reserved."
+    "    </footer>"
+    "</body>"
+    "</html>";
 
-    const char *response = "DATA SAVED";
     httpd_resp_send(req, response, HTTPD_RESP_USE_STRLEN);
 
     return err;
