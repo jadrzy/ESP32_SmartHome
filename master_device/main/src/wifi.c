@@ -1033,7 +1033,6 @@ esp_err_t recieve_html(httpd_req_t *req) {
         }
     }
 
-
     // writing to nvs
     write_wifi_sm_cred_to_nvs(ssid, psswd);
     write_paired_devices_to_nvs(mac_addresses, serial_numbers);
@@ -1043,6 +1042,14 @@ esp_err_t recieve_html(httpd_req_t *req) {
     data_parsed = NULL;
     free(html_content);
     html_content = NULL;
+
+
+
+    // response
+
+    const char *response = "DATA SAVED";
+    httpd_resp_send(req, response, HTTPD_RESP_USE_STRLEN);
+
     return err;
 }
 
