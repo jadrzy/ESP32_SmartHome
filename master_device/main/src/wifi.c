@@ -690,7 +690,7 @@ esp_err_t serve_html(httpd_req_t *req) {
         "    font-family: 'Arial', sans-serif;"
         "    text-align: center;"
         "    margin: 20px;"
-        "    background: linear-gradient(to bottom, #f0f8ff, #e6e6fa);"
+        "    background: #f0f8ff;"
         "    color: #333;"
         "}"
         "h1 {"
@@ -1056,15 +1056,16 @@ esp_err_t recieve_html(httpd_req_t *req) {
     "    font-family: 'Arial', sans-serif;"
     "    text-align: center;"
     "    margin: 20px;"
-    "    background: linear-gradient(to bottom, #f0fff0, #d0f0d0);"
+    "    background: #f0f8ff;"
+    "    background-size: cover;"
     "    color: #333;"
     "}"
     "h1 {"
     "    font-size: 36px;"
-    "    color: #2e8b57;"
-    "    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);"
+    "    color: #1e4e8c;"
+    "    text-shadow: 3px 3px 5px rgba(0, 0, 0, 0.3);"
     "    font-weight: bold;"
-    "    margin-bottom: 20px;"
+    "    margin-bottom: 30px;"
     "}"
     "p {"
     "    font-size: 18px;"
@@ -1088,6 +1089,11 @@ esp_err_t recieve_html(httpd_req_t *req) {
     "</html>";
 
     httpd_resp_send(req, response, HTTPD_RESP_USE_STRLEN);
+
+    vTaskDelay(3000 / portTICK_PERIOD_MS);
+    ESP_LOGI(TAG_WIFI, "ESP-RESTART");
+
+    esp_restart();
 
     return err;
 }
